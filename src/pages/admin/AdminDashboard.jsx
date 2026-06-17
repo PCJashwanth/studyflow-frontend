@@ -81,6 +81,7 @@ function AdminDashboard({ onLogout }) {
             {/* main content for user management */}
             <main className="main-area" onClick={() => setShowPopup(false)}>
 
+                {/* TODO: make a header component */}
                 <p className="greeting">User Management</p>
                 <p className="greeting-sub">Manage users, roles, and account status</p>
 
