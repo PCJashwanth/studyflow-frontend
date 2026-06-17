@@ -542,3 +542,46 @@
     padding: 20px 16px;
   }
 }
+
+/* sidebar for admin */
+.sidebar.admin {
+  background-color: #DC2626;
+}
+
+/* muted white text on red */
+.sidebar.admin .nav-item {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.sidebar.admin .nav-item:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+  color: #fff;
+}
+
+/* darker red for when clicked, active item */
+.sidebar.admin .nav-item.active {
+  background-color: rgba(0, 0, 0, 0.15);
+  color: #fff;
+  font-weight: 600;
+}
+
+.sidebar.admin .sidebar-logo {
+  color: #fff;
+}
+
+.sidebar.admin .user-name {
+  color: #fff;
+}
+
+.sidebar.admin .user-role {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* profile at the bottom background colour */
+.sidebar.admin .sidebar-user {
+  background-color: rgba(0, 0, 0, 0.15);
+}
+
+.sidebar.admin .sidebar-user:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+}
