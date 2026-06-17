@@ -8,7 +8,7 @@ import './App.css'
 
 function App() {
   // 'login', 'signup', 'student-dashboard', 'admin-dashboard' or 'instructor-dashboard'
-  const [page, setPage] = useState('login')
+  const [page, setPage] = useState('admin-dashboard')
 
   return (
     <>
