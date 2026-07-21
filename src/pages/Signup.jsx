@@ -1,11 +1,13 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
 // The three roles a user can sign up as (label -> backend enum is the uppercase).
 const ROLES = ['Student', 'Instructor', 'Admin']
 
-function Signup({ onGoToLogin }) {
+function Signup() {
   const { signup } = useAuth()
+  const navigate = useNavigate()
   const [role, setRole] = useState('Student')
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
@@ -24,11 +26,13 @@ function Signup({ onGoToLogin }) {
         password,
         role: role.toUpperCase(), // backend enum is UPPERCASE
       })
+      navigate('/')
       // On success, AuthContext sets the user and App renders the dashboard.
     } catch (err) {
       const data = err.response?.data
       const detail = data?.details && Object.values(data.details)[0]?.[0]
       setError(detail || data?.error || 'Signup failed. Please try again.')
+      console.log(err)
     } finally {
       setSubmitting(false)
     }
@@ -100,7 +104,7 @@ function Signup({ onGoToLogin }) {
         </form>
 
         <p className="switch-text">Already a user?</p>
-        <button onClick={onGoToLogin} className="btn-link">
+        <button onClick={() => navigate('/login')} className="btn-link">
           Log In
         </button>
       </div>

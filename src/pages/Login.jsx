@@ -1,9 +1,11 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
 // Login page - email/password form, talks to the backend.
-function Login({ onGoToSignup }) {
+function Login() {
   const { login } = useAuth()
+  const navigate = useNavigate()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -16,6 +18,7 @@ function Login({ onGoToSignup }) {
     try {
       // On success, AuthContext sets the user and App renders the dashboard.
       await login(email, password)
+      navigate('/')
     } catch (err) {
       setError(err.response?.data?.error || 'Login failed. Please try again.')
     } finally {
@@ -60,7 +63,7 @@ function Login({ onGoToSignup }) {
         </form>
 
         <p className="switch-text">Not a user?</p>
-        <button onClick={onGoToSignup} className="btn-link">
+        <button onClick={() => navigate("/signup")} className="btn-link">
           Sign Up
         </button>
       </div>

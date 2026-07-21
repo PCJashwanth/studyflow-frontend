@@ -14,7 +14,15 @@ function titleCase(role) {
 }
 
 function AdminDashboard() {
-  const { user, logout } = useAuth()
+  //const { user, logout } = useAuth()
+  const { logout } = useAuth()
+
+  const user = {
+    id: 1,
+    fullName: 'Test Admin',
+    email: 'admin@test.com',
+    role: 'ADMIN',
+  }
   const [activePage, setActivePage] = useState('Users')
   const [showPopup, setShowPopup] = useState(false)
   const [users, setUsers] = useState([])
@@ -49,6 +57,7 @@ function AdminDashboard() {
   }
 
   const visible = users.filter(
+  //const visible = (users || []).filter( //for testing admindashboard
     (u) =>
       u.fullName.toLowerCase().includes(search.toLowerCase()) ||
       u.email.toLowerCase().includes(search.toLowerCase()),
