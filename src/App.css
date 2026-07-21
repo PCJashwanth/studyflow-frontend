@@ -191,3 +191,517 @@
     padding: 7px 8px;
   }
 }
+
+
+/* ============================
+   DASHBOARD
+   ============================ */
+
+/* Outer wrapper — sidebar + main side by side */
+.dashboard {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* ── Sidebar ── */
+.sidebar {
+  width: 200px;
+  flex-shrink: 0;
+  background-color: #1a3050; /* dark blue */
+  display: flex;
+  flex-direction: column;
+  padding: 24px 0;
+}
+
+/* Logo row at the top of the sidebar */
+.sidebar-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 20px 28px;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+/* Nav buttons */
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 2px;
+  padding: 0 10px;
+}
+
+.nav-item {
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  color: #9ca3af; /* muted grey */
+  font-size: 14px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.nav-item:hover {
+  background-color: rgba(255, 255, 255, 0.07);
+  color: #fff;
+}
+
+/* Active nav item — lighter blue for students */
+.nav-item.active {
+  background-color: #2e6db4;
+  color: #fff;
+  font-weight: 600;
+}
+
+/* Instructor sidebar — full orange background */
+.sidebar.instructor {
+  background-color: #F5A623;
+}
+
+/* Muted white text on orange */
+.sidebar.instructor .nav-item {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.sidebar.instructor .nav-item:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+  color: #fff;
+}
+
+/* Active item — darker shade so it stands out on orange */
+.sidebar.instructor .nav-item.active {
+  background-color: rgba(0, 0, 0, 0.15);
+  color: #fff;
+  font-weight: 600;
+}
+
+.sidebar.instructor .sidebar-logo {
+  color: #fff;
+}
+
+.sidebar.instructor .user-name {
+  color: #fff;
+}
+
+.sidebar.instructor .user-role {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.sidebar.instructor .sidebar-user {
+  background-color: #2e6db4;
+}
+
+.sidebar.instructor .sidebar-user:hover {
+  background-color: #245a9a;
+}
+
+/* Sign out + user at the bottom of the sidebar */
+.sidebar-bottom {
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+
+/* Clicking the user row feels interactive */
+.sidebar-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  background-color: #2e6db4; /* blue so it stands out from the nav */
+}
+
+.sidebar-user:hover {
+  background-color: #245a9a;
+}
+
+/* Popup that appears above the profile row */
+.profile-popup {
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  margin: 0 10px 8px;
+}
+
+.popup-item {
+  background: none;
+  border: none;
+  text-align: left;
+  padding: 10px 14px;
+  font-size: 14px;
+  color: #222;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.popup-item:hover {
+  background-color: #f3f4f6;
+}
+
+/* Sign out in red */
+.popup-item.danger {
+  color: #ef4444;
+}
+
+.popup-item.danger:hover {
+  background-color: #fef2f2;
+}
+
+.popup-divider {
+  border: none;
+  border-top: 1px solid #eee;
+  margin: 4px 0;
+}
+
+/* Placeholder box for charts/heatmaps with no data yet */
+.chart-placeholder {
+  flex: 1;
+  background-color: #f8f9fa;
+  border: 2px dashed #ddd;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 160px;
+}
+
+/* Small avatar circle for the user */
+.user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: #F5A623;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.user-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  margin: 0;
+}
+
+.user-role {
+  font-size: 12px;
+  color: #9ca3af;
+  margin: 0;
+}
+
+/* ── Main content area ── */
+.main-area {
+  flex: 1;
+  background-color: #f0f2f7;
+  padding: 24px 32px; /* reduced top padding to move content up */
+  overflow-y: auto;
+}
+
+.greeting {
+  font-size: 22px;
+  font-weight: 700;
+  color: #111;
+  margin-bottom: 4px;
+}
+
+.greeting-sub {
+  font-size: 14px;
+  color: #888;
+  margin-bottom: 28px;
+}
+
+/* ── Stat cards ── */
+.stats-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+}
+
+.stat-card {
+  flex: 1;
+  min-width: 140px;
+  background-color: #fff;
+  border-radius: 14px;
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  /* Colored left border to match the screenshot style */
+  border-left: 5px solid #ddd;
+}
+
+.stat-card.orange-accent { border-left-color: #F5A623; }
+.stat-card.blue-accent   { border-left-color: #3b82f6; }
+.stat-card.green-accent  { border-left-color: #22c55e; }
+
+.stat-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: #111;
+}
+
+.stat-label {
+  font-size: 13px;
+  color: #888;
+}
+
+/* ── Two-column layout ── */
+.content-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+/* White panel used for "Today's plan" and "Upcoming deadlines" */
+.panel {
+  background-color: #fff;
+  border-radius: 14px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 220px;
+}
+
+.panel-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #111;
+  margin: 0;
+}
+
+/* Grey italic text shown when there's no data */
+.placeholder-msg {
+  font-size: 14px;
+  color: #bbb;
+  font-style: italic;
+}
+
+/* Orange "Generate schedule" button */
+.btn-generate {
+  margin-top: auto;
+  padding: 12px;
+  background-color: #F5A623;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-generate:hover {
+  background-color: #e09610;
+}
+
+/* ── Responsive — hide sidebar on mobile, stack layout ── */
+@media (max-width: 700px) {
+  .dashboard {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    flex-direction: row;
+    flex-wrap: wrap;
+    padding: 12px 16px;
+  }
+
+  .sidebar-nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+    padding: 0;
+  }
+
+  .sidebar-bottom {
+    display: none; /* hide on very small screens */
+  }
+
+  .content-grid {
+    grid-template-columns: 1fr; /* stack panels on mobile */
+  }
+
+  .main-area {
+    padding: 20px 16px;
+  }
+}
+
+/* sidebar for admin */
+.sidebar.admin {
+  background-color: #DC2626;
+}
+
+/* muted white text on red */
+.sidebar.admin .nav-item {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.sidebar.admin .nav-item:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+  color: #fff;
+}
+
+/* darker red for when clicked, active item */
+.sidebar.admin .nav-item.active {
+  background-color: rgba(0, 0, 0, 0.15);
+  color: #fff;
+  font-weight: 600;
+}
+
+.sidebar.admin .sidebar-logo {
+  color: #fff;
+}
+
+.sidebar.admin .user-name {
+  color: #fff;
+}
+
+.sidebar.admin .user-role {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* profile at the bottom background colour */
+.sidebar.admin .sidebar-user {
+  background-color: rgba(0, 0, 0, 0.15);
+}
+
+.sidebar.admin .sidebar-user:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+/* admin main content */
+
+.admin-panel {
+  min-height: auto;
+}
+
+.admin-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  gap: 16px;
+}
+
+.user-search {
+  width: 320px;
+  max-width: 100%;
+  padding: 12px 16px;
+  border: 1.5px solid #ddd;
+  border-radius: 10px;
+  font-size: 14px;
+  outline: none;
+}
+
+.user-search:focus {
+  border-color: #DC2626;
+}
+
+.add-user-btn {
+  border: none;
+  background-color: #DC2626;
+  color: white;
+  padding: 12px 18px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.add-user-btn:hover {
+  background-color: #b91c1c;
+}
+
+.user-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.user-table th {
+  text-align: left;
+  padding: 14px;
+  font-size: 13px;
+  color: #666;
+  border-bottom: 2px solid #bbb;
+}
+
+.user-table td {
+  padding: 14px;
+  border-bottom: 1px solid #eee;
+}
+
+.table-user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.table-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #f3f4f6;
+  color: #374151;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+}
+
+.role-select {
+  padding: 8px 10px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: white;
+}
+
+.status-badge {
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.status-badge.active {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status-badge.inactive {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.table-action {
+  background: none;
+  border: none;
+  color: #2563eb;
+  cursor: pointer;
+  margin-right: 12px;
+  font-size: 14px;
+}
+
+.table-action:hover {
+  text-decoration: underline;
+}
+
+.table-action.danger {
+  color: #DC2626;
+}

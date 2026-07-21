@@ -1,7 +1,7 @@
 import { useState } from 'react'
 
 // Login page - shows email/password form
-function Login({ onGoToSignup }) {
+function Login({ onGoToSignup, onLogin }) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
 
@@ -9,6 +9,7 @@ function Login({ onGoToSignup }) {
     e.preventDefault()
     // TODO: connect to backend login API
     console.log('Login submitted:', { email, password })
+    onLogin()
   }
 
   return (
