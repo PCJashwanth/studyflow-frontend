@@ -705,3 +705,106 @@
 .table-action.danger {
   color: #DC2626;
 }
+
+/* ============================
+   AUTH + LIVE-DATA ADDITIONS
+   ============================ */
+
+/* full-screen loading state during auth bootstrap */
+.loading {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+  font-size: 15px;
+}
+
+/* inline error message (login/signup + dashboards) */
+.error-text {
+  color: #dc2626;
+  background: #fee2e2;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 13px;
+  margin-bottom: 14px;
+  text-align: left;
+}
+
+/* disabled buttons (submitting / self-row admin actions) */
+button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* student: upcoming deadlines list */
+.deadline-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.deadline-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+}
+.deadline-day {
+  width: 38px;
+  font-weight: 600;
+  color: #6b7280;
+}
+.deadline-title {
+  flex: 1;
+}
+.priority-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+.priority-badge.high { background: #fee2e2; color: #b91c1c; }
+.priority-badge.medium { background: #fef3c7; color: #b45309; }
+.priority-badge.low { background: #e0e7ff; color: #4338ca; }
+
+/* instructor: simple horizontal bar list (stand-in for the chart) */
+.bar-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.bar-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+}
+.bar-label {
+  width: 42%;
+  color: #374151;
+}
+.bar-track {
+  flex: 1;
+  height: 10px;
+  background: #f1f5f9;
+  border-radius: 999px;
+  overflow: hidden;
+}
+.bar-fill {
+  display: block;
+  height: 100%;
+  background: #F5A623;
+  border-radius: 999px;
+}
+.bar-value {
+  width: 44px;
+  text-align: right;
+  font-weight: 600;
+  color: #374151;
+}
