@@ -1,14 +1,17 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 // The three roles a user can sign up as
 const ROLES = ['Student', 'Instructor', 'Admin']
 
 // Signup page - shows role selection + name/email/password form
-function Signup({ onGoToLogin }) {
+function Signup() {
   const [role, setRole] = useState('Student') // default to Student
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+
+  const navigate = useNavigate()
 
   function handleSubmit(e) {
     e.preventDefault()
@@ -90,7 +93,7 @@ function Signup({ onGoToLogin }) {
 
         {/* Link to go back to the login page */}
         <p className="switch-text">Already a user?</p>
-        <button onClick={onGoToLogin} className="btn-link">
+        <button onClick={() => navigate('/login')} className="btn-link">
           Log In
         </button>
 

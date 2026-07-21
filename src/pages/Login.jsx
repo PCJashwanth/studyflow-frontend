@@ -1,15 +1,20 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 // Login page - shows email/password form
-function Login({ onGoToSignup, onLogin }) {
+function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+
+  const navigate = useNavigate()
 
   function handleSubmit(e) {
     e.preventDefault()
     // TODO: connect to backend login API
     console.log('Login submitted:', { email, password })
-    onLogin()
+    
+    // 'student-dashboard', 'admin-dashboard' or 'instructor-dashboard'
+    navigate('/admin-dashboard')
   }
 
   return (
@@ -56,7 +61,7 @@ function Login({ onGoToSignup, onLogin }) {
 
         {/* Link to switch to the signup page */}
         <p className="switch-text">Not a user?</p>
-        <button onClick={onGoToSignup} className="btn-link">
+        <button onClick={() => navigate("/signup")} className="btn-link">
           Sign Up
         </button>
 

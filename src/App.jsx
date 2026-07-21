@@ -1,3 +1,4 @@
+import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 import { useState } from 'react'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
@@ -7,31 +8,15 @@ import AdminDashboard from './pages/admin/AdminDashboard'
 import './App.css'
 
 function App() {
-  // 'login', 'signup', 'student-dashboard', 'admin-dashboard' or 'instructor-dashboard'
-  const [page, setPage] = useState('login')
-
   return (
-    <>
-      {page === 'login' && (
-        <Login
-          onGoToSignup={() => setPage('signup')}
-          onLogin={() => setPage('student-dashboard')}
-        />
-      )}
-      {page === 'signup' && (
-        <Signup onGoToLogin={() => setPage('login')} />
-      )}
-      {page === 'student-dashboard' && (
-        <StudentDashboard onLogout={() => setPage('login')} />
-      )}
-      {page === 'instructor-dashboard' && (
-        <InstructorDashboard onLogout={() => setPage('login')} />
-      )}
-      {page === 'admin-dashboard' && (
-        <AdminDashboard onLogout={() => setPage('login')} />
-      )}
-    </>
-  )
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Login />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
+      </Routes>
+    </BrowserRouter>
+  );
 }
 
 export default App
