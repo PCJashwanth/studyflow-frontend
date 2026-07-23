@@ -409,8 +409,15 @@
 .main-area {
   flex: 1;
   background-color: #f0f2f7;
-  padding: 24px 32px; /* reduced top padding to move content up */
+  /* No padding here so the white page header can stretch edge-to-edge.
+     Each page's content is wrapped in .page-body, which adds the padding. */
+  padding: 0;
   overflow-y: auto;
+}
+
+/* Padded wrapper for the actual page content (everything below the header) */
+.page-body {
+  padding: 24px 32px;
 }
 
 .greeting {
@@ -538,7 +545,7 @@
     grid-template-columns: 1fr; /* stack panels on mobile */
   }
 
-  .main-area {
+  .page-body {
     padding: 20px 16px;
   }
 }
@@ -807,4 +814,602 @@ button:disabled {
   text-align: right;
   font-weight: 600;
   color: #374151;
+}
+
+
+/* ── Shared page header (white bar with title + search) ── */
+.page-header {
+  background-color: #fff;
+  padding: 18px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 1px solid #e8eaef;
+}
+
+.page-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #111;
+  margin: 0;
+}
+
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #f0f2f7;
+  border-radius: 10px;
+  padding: 9px 14px;
+  width: 280px;
+  max-width: 40%;
+}
+
+.search-box input {
+  border: none;
+  background: none;
+  outline: none;
+  font-size: 14px;
+  width: 100%;
+  color: #333;
+}
+
+/* A reusable orange action button used across pages */
+.btn-cta {
+  padding: 12px 18px;
+  background-color: #F5A623;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.btn-cta:hover { background-color: #e09610; }
+.btn-cta.full { width: 100%; }
+
+/* A reusable white/outline button (secondary actions) */
+.btn-outline {
+  padding: 10px 18px;
+  background-color: #fff;
+  border: 1.5px solid #dcdfe5;
+  border-radius: 10px;
+  font-size: 14px;
+  color: #374151;
+  cursor: pointer;
+}
+.btn-outline:hover { background-color: #f7f8fa; }
+
+/* Small coloured dot used next to course names */
+.course-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: inline-block;
+}
+.course-dot.green  { background-color: #22c55e; }
+.course-dot.blue   { background-color: #3b82f6; }
+.course-dot.purple { background-color: #8b5cf6; }
+
+/* A little dark tooltip that appears on hover ("Why this block?").
+   Put class "has-tip" on the parent and a .tip element inside it. */
+.has-tip { position: relative; }
+.tip {
+  position: absolute;
+  z-index: 5;
+  bottom: calc(100% + 8px);
+  left: 0;
+  width: 230px;
+  background-color: #1e2233;
+  color: #fff;
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 12px;
+  line-height: 1.5;
+  opacity: 0;               /* hidden until hover */
+  pointer-events: none;
+  transition: opacity 0.15s;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+.tip-title { font-weight: 700; display: block; margin-bottom: 4px; }
+.has-tip:hover .tip { opacity: 1; }
+
+/* ── Courses & Tasks ── */
+.tasks-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+.task-search-input {
+  flex: 1;
+  min-width: 180px;
+  max-width: 320px;
+  padding: 11px 16px;
+  border: 1.5px solid #dcdfe5;
+  border-radius: 10px;
+  font-size: 14px;
+  outline: none;
+}
+.task-search-input:focus { border-color: #2e6db4; }
+
+/* Filter pills: All / In progress / High priority */
+.filter-pill {
+  padding: 9px 16px;
+  border: 1.5px solid #dcdfe5;
+  background-color: #fff;
+  border-radius: 10px;
+  font-size: 14px;
+  color: #374151;
+  cursor: pointer;
+}
+.filter-pill.active {
+  background-color: #2e6db4;
+  border-color: #2e6db4;
+  color: #fff;
+}
+/* This empty flex item pushes the "Add task" button to the far right */
+.toolbar-spacer { flex: 1; }
+
+.course-group { margin-bottom: 26px; }
+.course-group-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 12px;
+}
+
+/* One task line. A grid keeps the columns lined up neatly. */
+.task-row {
+  display: grid;
+  grid-template-columns: 20px 1fr 60px 104px 70px 52px;
+  align-items: center;
+  gap: 14px;
+  background-color: #fff;
+  border-radius: 12px;
+  padding: 16px 18px;
+  margin-bottom: 10px;
+}
+.task-check {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #2e6db4;
+}
+.task-title { font-size: 14px; color: #111; }
+/* Cross out tasks that are finished */
+.task-title.done { text-decoration: line-through; color: #9ca3af; }
+
+.task-status {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 999px;
+  text-align: center;
+  white-space: nowrap;
+}
+.task-status.inprogress { background-color: #fef3c7; color: #b45309; }
+.task-status.done       { background-color: #dcfce7; color: #166534; }
+.task-status.notstarted { background-color: #e5e9f0; color: #6b7280; }
+
+.task-due { font-size: 13px; color: #6b7280; text-align: right; }
+.task-icons { display: flex; gap: 10px; justify-content: flex-end; }
+.task-icon-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #9ca3af;
+  font-size: 15px;
+}
+.task-icon-btn:hover { color: #4b5563; }
+
+/* ── Availability ── */
+.availability-layout {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+.availability-card {
+  background-color: #fff;
+  border-radius: 16px;
+  padding: 20px;
+  flex: 1;
+  min-width: 520px;
+}
+/* The weekly grid: a time column + 7 day columns */
+.avail-grid {
+  display: grid;
+  grid-template-columns: 46px repeat(7, 1fr);
+  gap: 6px;
+}
+.avail-day {
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  padding-bottom: 4px;
+}
+.avail-time {
+  font-size: 12px;
+  color: #9ca3af;
+  display: flex;
+  align-items: center;
+}
+/* Each clickable time slot. Click cycles through the four states. */
+.avail-cell {
+  height: 34px;
+  border-radius: 8px;
+  border: 1px solid #eef1f5;
+  background-color: #fff;
+  cursor: pointer;
+}
+.avail-cell.class   { background-color: #2e6db4; border-color: #2e6db4; }
+.avail-cell.work    { background-color: #F5A623; border-color: #F5A623; }
+.avail-cell.blocked { background-color: #e2e8f0; border-color: #e2e8f0; }
+
+.avail-legend {
+  display: flex;
+  gap: 18px;
+  margin-top: 16px;
+  font-size: 13px;
+  color: #4b5563;
+  flex-wrap: wrap;
+}
+.legend-item { display: flex; align-items: center; gap: 7px; }
+.legend-swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  border: 1px solid #e2e8f0;
+}
+.legend-swatch.free    { background-color: #fff; }
+.legend-swatch.class   { background-color: #2e6db4; }
+.legend-swatch.work    { background-color: #F5A623; }
+.legend-swatch.blocked { background-color: #e2e8f0; }
+
+/* Right-hand "Study preferences" card */
+.prefs-card {
+  background-color: #fff;
+  border-radius: 16px;
+  padding: 22px;
+  width: 300px;
+  flex-shrink: 0;
+}
+.prefs-title { font-size: 17px; font-weight: 700; margin: 0 0 20px; }
+.pref-block { margin-bottom: 22px; }
+.pref-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 10px;
+}
+.pref-slider-row { display: flex; align-items: center; gap: 10px; }
+.pref-slider { flex: 1; accent-color: #2e6db4; }
+.pref-slider-value { font-size: 13px; color: #6b7280; width: 26px; }
+
+.focus-pills { display: flex; gap: 8px; }
+.focus-pill {
+  flex: 1;
+  padding: 9px 4px;
+  border: 1.5px solid #dcdfe5;
+  background-color: #fff;
+  border-radius: 10px;
+  font-size: 13px;
+  cursor: pointer;
+  color: #374151;
+}
+.focus-pill.active { background-color: #2e6db4; border-color: #2e6db4; color: #fff; }
+
+/* Little "- 15 min +" number stepper */
+.stepper {
+  display: inline-flex;
+  align-items: center;
+  border: 1.5px solid #dcdfe5;
+  border-radius: 10px;
+  overflow: hidden;
+}
+.stepper button {
+  width: 34px;
+  height: 38px;
+  border: none;
+  background-color: #f7f8fa;
+  font-size: 16px;
+  cursor: pointer;
+  color: #374151;
+}
+.stepper button:hover { background-color: #eef1f5; }
+.stepper span { padding: 0 16px; font-size: 14px; color: #111; }
+
+.toggle-row { display: flex; align-items: center; justify-content: space-between; }
+
+/* On/off toggle switch (used on Availability + Settings) */
+.switch { position: relative; width: 44px; height: 24px; display: inline-block; flex-shrink: 0; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.switch .slider {
+  position: absolute;
+  inset: 0;
+  background-color: #cbd5e1;
+  border-radius: 999px;
+  transition: 0.2s;
+  cursor: pointer;
+}
+.switch .slider::before {
+  content: "";
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  left: 3px;
+  top: 3px;
+  background-color: #fff;
+  border-radius: 50%;
+  transition: 0.2s;
+}
+.switch input:checked + .slider { background-color: #2e6db4; }
+.switch input:checked + .slider::before { transform: translateX(20px); }
+
+/* ── Calendar ── */
+.calendar-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+.cal-nav {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #1f2937;
+}
+.cal-arrow { background: none; border: none; font-size: 18px; cursor: pointer; color: #6b7280; }
+.view-toggle { display: flex; gap: 6px; }
+.view-btn {
+  padding: 8px 18px;
+  border: 1.5px solid #dcdfe5;
+  background-color: #fff;
+  border-radius: 10px;
+  font-size: 14px;
+  cursor: pointer;
+  color: #374151;
+}
+.view-btn.active { background-color: #2e6db4; border-color: #2e6db4; color: #fff; }
+.today-btn {
+  margin-left: auto;
+  padding: 8px 18px;
+  border: 1.5px solid #dcdfe5;
+  background-color: #fff;
+  border-radius: 10px;
+  font-size: 14px;
+  cursor: pointer;
+  color: #374151;
+}
+
+.cal-week { background-color: #fff; border-radius: 16px; overflow: hidden; }
+/* Header row of day names, then one grid row per time slot */
+.cal-week-head,
+.cal-row { display: grid; grid-template-columns: 60px repeat(7, 1fr); }
+.cal-week-head { border-bottom: 1px solid #eef1f5; }
+.cal-week-head div {
+  padding: 12px 8px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+}
+.cal-row { border-bottom: 1px solid #f4f5f8; min-height: 58px; }
+.cal-time { font-size: 12px; color: #9ca3af; padding: 6px; }
+.cal-cell { border-left: 1px solid #f4f5f8; padding: 5px; }
+
+/* A single event block inside the calendar */
+.cal-event {
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-size: 12px;
+  font-weight: 600;
+  border-left: 3px solid;
+}
+.cal-event .sub { display: block; font-weight: 400; font-size: 11px; opacity: 0.85; }
+.cal-event.class    { background-color: #e5edf7; color: #1e3a5f; border-color: #2e6db4; }
+.cal-event.study    { background-color: #e3f5e8; color: #166534; border-color: #22c55e; }
+.cal-event.deadline { background-color: #fdeaea; color: #b91c1c; border-color: #dc2626; }
+
+/* Simple month view (just the dates, no events) */
+.cal-month { background-color: #fff; border-radius: 16px; padding: 16px; }
+.cal-month-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+.cal-month-dow {
+  text-align: center;
+  font-weight: 600;
+  font-size: 12px;
+  color: #6b7280;
+  padding-bottom: 4px;
+}
+.cal-month-cell {
+  min-height: 84px;
+  border: 1px solid #f1f3f7;
+  border-radius: 8px;
+  padding: 6px;
+  font-size: 13px;
+  color: #374151;
+}
+.cal-month-cell.empty { background-color: #fafbfc; border-style: dashed; }
+.cal-month-cell.today { border-color: #2e6db4; background-color: #eef4fb; font-weight: 700; }
+
+/* ── Kanban ── */
+.kanban-board {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+.kanban-col { background-color: #fff; border-radius: 16px; padding: 16px; }
+.kanban-col-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 14px;
+}
+.kanban-count {
+  background-color: #eef1f5;
+  color: #6b7280;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 999px;
+  padding: 2px 9px;
+}
+.kanban-card { background-color: #f7f8fa; border-radius: 12px; padding: 14px; margin-bottom: 10px; }
+.kanban-card-title {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #111;
+  margin-bottom: 8px;
+}
+.kanban-note { font-size: 12px; color: #6b7280; margin: 0 0 8px 19px; }
+.kanban-course {
+  display: inline-block;
+  background-color: #fff;
+  border: 1px solid #eef1f5;
+  color: #4b5563;
+  font-size: 12px;
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+
+/* ── AI Schedule ── */
+.ai-topbar { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+.ai-status {
+  background-color: #dcfce7;
+  color: #166534;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 14px;
+  border-radius: 999px;
+}
+.ai-actions { margin-left: auto; display: flex; gap: 10px; }
+.ai-layout { display: grid; grid-template-columns: 260px 1fr; gap: 16px; align-items: start; }
+.ai-factors-card,
+.ai-week-card { background-color: #fff; border-radius: 16px; padding: 20px; }
+.ai-card-title { font-size: 16px; font-weight: 700; margin: 0 0 16px; }
+.factor { background-color: #f7f8fa; border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; }
+.factor-title { font-size: 14px; font-weight: 600; color: #111; }
+.factor-sub { font-size: 12px; color: #6b7280; margin-top: 2px; }
+
+.ai-week { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+.ai-day-name { text-align: center; font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 10px; }
+.ai-block {
+  background-color: #e3f5e8;
+  color: #166534;
+  border-radius: 10px;
+  padding: 10px;
+  margin-bottom: 8px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.ai-block .hrs { display: block; font-weight: 400; font-size: 12px; opacity: 0.75; margin-top: 2px; }
+.ai-block.highlight { background-color: #22c55e; color: #fff; }
+
+/* ── Weekly Reflection ── */
+.section-sub { font-size: 14px; color: #6b7280; margin: 0 0 20px; }
+.insight-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px; }
+.insight-item {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  background-color: #f7f8fa;
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 14px;
+  color: #374151;
+}
+.insight-emoji { font-size: 18px; line-height: 1.4; }
+.suggestion-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background-color: #f7f8fa;
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+  font-size: 14px;
+  color: #374151;
+}
+.btn-small {
+  padding: 8px 16px;
+  background-color: #F5A623;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.btn-small:hover { background-color: #e09610; }
+/* Once accepted, the button turns green and stops looking clickable */
+.btn-small.accepted { background-color: #dcfce7; color: #166534; cursor: default; }
+
+/* ── Settings (Notifications & Export) ── */
+.settings-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+.settings-card { background-color: #fff; border-radius: 16px; padding: 22px; }
+.settings-card-title { font-size: 17px; font-weight: 700; margin: 0 0 18px; }
+.notif-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background-color: #f7f8fa;
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+}
+.notif-text .t { font-size: 14px; font-weight: 600; color: #111; }
+.notif-text .s { font-size: 12px; color: #6b7280; margin-top: 2px; }
+.export-desc { font-size: 13px; color: #6b7280; margin: 0 0 16px; }
+.export-app {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid #eef1f5;
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  font-size: 14px;
+  color: #374151;
+}
+.export-open { background: none; border: none; color: #2e6db4; font-weight: 600; cursor: pointer; font-size: 14px; }
+.export-success {
+  background-color: #dcfce7;
+  color: #166534;
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  margin-top: 12px;
+  border-left: 4px solid #22c55e;
+}
+
+/* ── Make the wider layouts stack on small screens ── */
+@media (max-width: 900px) {
+  .ai-layout,
+  .settings-layout { grid-template-columns: 1fr; }
+  .kanban-board { grid-template-columns: 1fr; }
+  .availability-card { min-width: 0; }
+  .prefs-card { width: 100%; }
+  .ai-week { grid-template-columns: repeat(2, 1fr); }
 }
