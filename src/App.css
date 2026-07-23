@@ -550,24 +550,24 @@
   }
 }
 
-/* sidebar for admin */
+/* sidebar for admin — deep indigo (distinct from student navy + instructor orange) */
 .sidebar.admin {
-  background-color: #DC2626;
+  background-color: #312e81;
 }
 
-/* muted white text on red */
+/* muted white text on indigo */
 .sidebar.admin .nav-item {
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(255, 255, 255, 0.75);
 }
 
 .sidebar.admin .nav-item:hover {
-  background-color: rgba(255, 255, 255, 0.15);
+  background-color: rgba(255, 255, 255, 0.1);
   color: #fff;
 }
 
-/* darker red for when clicked, active item */
+/* brighter indigo for the active item so it stands out */
 .sidebar.admin .nav-item.active {
-  background-color: rgba(0, 0, 0, 0.15);
+  background-color: #4f46e5;
   color: #fff;
   font-weight: 600;
 }
@@ -586,11 +586,11 @@
 
 /* profile at the bottom background colour */
 .sidebar.admin .sidebar-user {
-  background-color: rgba(0, 0, 0, 0.15);
+  background-color: rgba(255, 255, 255, 0.1);
 }
 
 .sidebar.admin .sidebar-user:hover {
-  background-color: rgba(255, 255, 255, 0.15);
+  background-color: rgba(255, 255, 255, 0.18);
 }
 
 /* admin main content */
@@ -618,12 +618,14 @@
 }
 
 .user-search:focus {
-  border-color: #DC2626;
+  border-color: #4f46e5;
 }
 
-.add-user-btn {
+/* Admin primary button (Add user / Add course). Indigo to match the theme. */
+.add-user-btn,
+.btn-admin {
   border: none;
-  background-color: #DC2626;
+  background-color: #4f46e5;
   color: white;
   padding: 12px 18px;
   border-radius: 10px;
@@ -632,8 +634,9 @@
   cursor: pointer;
 }
 
-.add-user-btn:hover {
-  background-color: #b91c1c;
+.add-user-btn:hover,
+.btn-admin:hover {
+  background-color: #4338ca;
 }
 
 .user-table {
@@ -1413,3 +1416,257 @@ button:disabled {
   .prefs-card { width: 100%; }
   .ai-week { grid-template-columns: repeat(2, 1fr); }
 }
+
+/* Header with the course dropdown next to the page title */
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.course-select {
+  padding: 8px 12px;
+  border: 1.5px solid #dcdfe5;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #1f2937;
+  background-color: #fff;
+  cursor: pointer;
+  outline: none;
+}
+.course-select:focus { border-color: #2e6db4; }
+
+/* Blue "anonymized data" reassurance banner */
+.info-banner {
+  background-color: #eaf2fb;
+  color: #1e40af;
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 20px;
+}
+/* Amber suggestion banner at the bottom of the Workload page */
+.warn-banner {
+  background-color: #fef6e0;
+  color: #92610a;
+  border-left: 4px solid #F5A623;
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  margin-top: 20px;
+}
+
+/* ── Workload bar chart ── */
+/* The bars sit in a fixed-height box; each bar's height is a % of the tallest
+   value, and the dashed line + markers are positioned by the same %. */
+.workload-plot {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  height: 240px;
+  padding-top: 28px; /* leaves room for the assessment labels above the bars */
+  margin-top: 8px;
+}
+.bar-col {
+  position: relative;
+  flex: 1;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+}
+.bar {
+  width: 100%;
+  min-height: 4px;
+  background-color: #2e6db4;
+  border-radius: 6px 6px 0 0;
+}
+.bar.peak { background-color: #dc2626; } /* the week over the max is red */
+/* Assessment label (A1, A3, Proj…) floating just above its bar */
+.bar-marker {
+  position: absolute;
+  left: 50%;
+  transform: translate(-50%, -4px);
+  font-size: 11px;
+  font-weight: 600;
+  color: #374151;
+  white-space: nowrap;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+.marker-dot { width: 5px; height: 5px; border-radius: 50%; background-color: #374151; }
+/* The dashed "recommended max" line across the chart */
+.max-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-top: 2px dashed #F5A623;
+}
+.max-line-label {
+  position: absolute;
+  right: 0;
+  top: -9px;
+  font-size: 11px;
+  color: #c07d13;
+  background-color: #fff;
+  padding: 0 6px;
+}
+.week-labels { display: flex; gap: 10px; margin-top: 8px; }
+.week-labels span { flex: 1; text-align: center; font-size: 12px; color: #9ca3af; }
+
+/* ── Assignments table ── */
+.assign-subhead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.assign-note-text { font-size: 14px; color: #6b7280; }
+.assign-card { padding: 12px 20px; min-height: auto; }
+.assign-name { font-size: 14px; font-weight: 600; color: #111; }
+.assign-warning-note { font-size: 12px; color: #b45309; margin-top: 4px; }
+/* The flagged row gets an amber wash + a coloured left edge */
+.assign-row-warning td { background-color: #fef6e0; }
+.assign-row-warning td:first-child { border-left: 3px solid #F5A623; }
+/* Low numbers (below 70%) turn red so problem spots pop */
+.text-danger { color: #dc2626; font-weight: 600; }
+
+.assign-status {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.assign-status.closed    { background-color: #eef1f5; color: #6b7280; }
+.assign-status.open      { background-color: #e5edf7; color: #1e40af; }
+.assign-status.scheduled { background-color: #e5e9f0; color: #475569; }
+
+/* ── Instructor Settings extras (reuses the student settings styles) ── */
+.settings-field { margin-bottom: 16px; }
+.settings-field label {
+  display: block;
+  font-size: 13px;
+  color: #6b7280;
+  margin-bottom: 6px;
+}
+.settings-field input {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1.5px solid #dcdfe5;
+  border-radius: 10px;
+  font-size: 14px;
+  outline: none;
+}
+.settings-field input:focus { border-color: #2e6db4; }
+
+.analytics-card { margin-top: 16px; }
+.lock-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 0;
+  border-top: 1px solid #f1f3f7;
+}
+.lock-row:first-of-type { border-top: none; padding-top: 0; }
+.lock-toggle { display: flex; align-items: center; gap: 10px; }
+.lock-label { font-size: 13px; color: #6b7280; }
+
+.settings-actions {
+  margin-top: 16px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* Coloured avatar circles in the tables (solid fill, white initials) */
+.table-avatar.blue   { background-color: #3b82f6; color: #fff; }
+.table-avatar.purple { background-color: #8b5cf6; color: #fff; }
+.table-avatar.orange { background-color: #f97316; color: #fff; }
+.table-avatar.green  { background-color: #22c55e; color: #fff; }
+.table-avatar.grey   { background-color: #9ca3af; color: #fff; }
+.table-avatar.red    { background-color: #dc2626; color: #fff; }
+
+/* ── Deactivate confirmation modal ── */
+/* Full-screen dim layer; the dialog sits centered on top of it */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(15, 23, 42, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  padding: 20px;
+}
+.modal {
+  background-color: #fff;
+  border-radius: 16px;
+  padding: 28px;
+  max-width: 400px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+.modal-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background-color: #fee2e2;
+  color: #dc2626;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  margin: 0 auto 16px;
+}
+.modal-title { font-size: 18px; font-weight: 700; color: #111; margin: 0 0 8px; }
+.modal-text { font-size: 14px; color: #6b7280; line-height: 1.5; margin: 0 0 22px; }
+.modal-actions { display: flex; gap: 12px; justify-content: center; }
+
+/* Red confirm button for destructive actions (Deactivate) */
+.btn-danger {
+  padding: 11px 22px;
+  background-color: #dc2626;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.btn-danger:hover { background-color: #b91c1c; }
+
+/* ── Audit log ── */
+.audit-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+.audit-filters { display: flex; gap: 8px; flex-wrap: wrap; }
+.audit-actor { display: flex; align-items: center; gap: 10px; }
+.audit-when { color: #6b7280; font-size: 13px; }
+.audit-affected { color: #374151; }
+/* The far-right link: Reverse (blue) or Review (amber) */
+.audit-action-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 0;
+}
+.audit-action-btn.reverse { color: #2e6db4; }
+.audit-action-btn.review { color: #d97706; }
+.audit-action-btn:hover { text-decoration: underline; }
+.audit-none { color: #9ca3af; }
