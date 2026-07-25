@@ -20,6 +20,15 @@ function initialsOf(name) {
 
 function AdminDashboard() {
   const { user, logout } = useAuth()
+  {/*const { logout } = useAuth() //for testing admin dashboard
+
+  const user = {
+    id: 1,
+    fullName: 'Test Admin',
+    email: 'admin@test.com',
+    role: 'ADMIN',
+  }
+  */}
   const [activePage, setActivePage] = useState('Users')
   const [showPopup, setShowPopup] = useState(false)
 

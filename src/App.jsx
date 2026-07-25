@@ -1,32 +1,70 @@
 import { useState } from 'react'
-import { useAuth } from './context/AuthContext'
+import { AuthProvider, useAuth } from './context/AuthContext'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
 import StudentDashboard from './pages/Student/StudentDashboard'
 import InstructorDashboard from './pages/Instructor/InstructorDashboard'
 import AdminDashboard from './pages/admin/AdminDashboard'
+import { Routes, Route, Navigate } from 'react-router-dom'
+import ProtectedRoute from './components/ProtectedRoute'
+import RoleRoute from './components/RoleRoute'
+import DashboardRedirect from './components/DashboardRedirect'
 import './App.css'
+import { BrowserRouter } from 'react-router-dom'
+
+function AppRoutes() {
+  return (
+    <Routes>
+      <Route path="/login" element={<Login />} />
+      <Route path="/signup" element={<Signup />} />
+      {/*<Route path="/admin" element={<AdminDashboard />} /> for testing*/}
+
+      <Route path="/" element={
+          <ProtectedRoute>
+            <DashboardRedirect />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route path="/student" element={
+          <ProtectedRoute>
+            <RoleRoute role="STUDENT">
+              <StudentDashboard />
+            </RoleRoute>
+          </ProtectedRoute>
+        }
+      />
+
+
+      <Route path="/instructor" element={
+          <ProtectedRoute>
+            <RoleRoute role="INSTRUCTOR">
+              <InstructorDashboard />
+            </RoleRoute>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route path="/admin" element={
+          <ProtectedRoute>
+            <RoleRoute role="ADMIN">
+              <AdminDashboard />
+            </RoleRoute>
+          </ProtectedRoute>
+        }
+      />
+      
+
+      {/* Catch all */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  )
+}
 
 function App() {
-  const { user, loading } = useAuth()
-  // Only used while logged out, to toggle between login and signup.
-  const [authPage, setAuthPage] = useState('login')
-
-  if (loading) return <div className="loading">Loading…</div>
-
-  // Logged out → auth screens.
-  if (!user) {
-    return authPage === 'signup' ? (
-      <Signup onGoToLogin={() => setAuthPage('login')} />
-    ) : (
-      <Login onGoToSignup={() => setAuthPage('signup')} />
-    )
-  }
-
-  // Logged in → the dashboard for the user's role.
-  if (user.role === 'INSTRUCTOR') return <InstructorDashboard />
-  if (user.role === 'ADMIN') return <AdminDashboard />
-  return <StudentDashboard />
+  return (
+    <AppRoutes />
+  )
 }
 
 export default App
