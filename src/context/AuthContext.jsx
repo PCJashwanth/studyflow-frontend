@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react'
-import { api, tokenStore, setUnauthorizedHandler } from '../lib/api'
+import { api, tokenStore, setUnauthorizedHandler, clearApiCache } from '../lib/api'
 
 const AuthContext = createContext(null)
 
@@ -53,6 +53,7 @@ export function AuthProvider({ children }) {
   }, [])
 
   const logout = useCallback(() => {
+    clearApiCache()
     tokenStore.clear()
     setUser(null)
   }, [])
