@@ -1,14 +1,29 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import AuthLayout, { PasswordField } from './AuthLayout'
 
-// The three roles a user can sign up as (label -> backend enum is the uppercase).
-const ROLES = ['Student', 'Instructor', 'Admin']
+// The three roles a user can sign up as (value is the backend enum).
+const ROLES = [
+  { label: 'Student', value: 'STUDENT' },
+  { label: 'Instructor', value: 'INSTRUCTOR' },
+  { label: 'Administrator', value: 'ADMIN' },
+]
+
+// Shown live under the password field. Only the length is enforced (that is
+// all the backend requires) — the other two are guidance.
+function passwordRules(password) {
+  return [
+    { label: 'At least 8 characters', ok: password.length >= 8 },
+    { label: 'One number', ok: /\d/.test(password) },
+    { label: 'One symbol', ok: /[^A-Za-z0-9]/.test(password) },
+  ]
+}
 
 function Signup() {
   const { signup } = useAuth()
   const navigate = useNavigate()
-  const [role, setRole] = useState('Student')
+  const [role, setRole] = useState('STUDENT')
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -20,14 +35,8 @@ function Signup() {
     setError('')
     setSubmitting(true)
     try {
-      await signup({
-        fullName,
-        email,
-        password,
-        role: role.toUpperCase(), // backend enum is UPPERCASE
-      })
-      navigate('/')
-      // On success, AuthContext sets the user and App renders the dashboard.
+      await signup({ fullName, email, password, role })
+      navigate('/') // DashboardRedirect sends them to the right role dashboard
     } catch (err) {
       const data = err.response?.data
       const detail = data?.details && Object.values(data.details)[0]?.[0]
@@ -39,76 +48,95 @@ function Signup() {
   }
 
   return (
-    <div className="page">
-      <div className="card">
-        <h1 className="logo">Study Flow</h1>
-        <h2>Create account</h2>
-        <p className="subtitle">Choose how you will use StudyFlow</p>
+    <AuthLayout
+      headline={
+        <>
+          Join in under
+          <br />a minute.
+        </>
+      }
+    >
+      <h1>Create your account</h1>
+      <p className="auth-subtitle">Choose the role that fits you</p>
 
-        <form onSubmit={handleSubmit}>
-          <div className="role-section">
-            <label>Role</label>
-            <div className="role-buttons">
-              {ROLES.map((r) => (
-                <button
-                  key={r}
-                  type="button"
-                  className={`role-btn ${r.toLowerCase()} ${role === r ? 'active' : ''}`}
-                  onClick={() => setRole(r)}
-                >
-                  {r}
-                </button>
-              ))}
-            </div>
+      <form onSubmit={handleSubmit}>
+        <div className="role-section">
+          <span id="role-label">I am a…</span>
+          <div className="role-buttons" role="group" aria-labelledby="role-label">
+            {ROLES.map((r) => (
+              <button
+                key={r.value}
+                type="button"
+                className={`role-btn ${role === r.value ? 'active' : ''}`}
+                aria-pressed={role === r.value}
+                onClick={() => setRole(r.value)}
+              >
+                {r.label}
+              </button>
+            ))}
           </div>
+        </div>
 
-          <div className="field">
-            <label htmlFor="fullName">Full Name</label>
-            <input
-              id="fullName"
-              type="text"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              required
-            />
-          </div>
+        <div className="field">
+          <label htmlFor="fullName">Full name</label>
+          <input
+            id="fullName"
+            type="text"
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+            placeholder="Maya Thompson"
+            autoComplete="name"
+            required
+          />
+        </div>
 
-          <div className="field">
-            <label htmlFor="email">Email</label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
+        <div className="field">
+          <label htmlFor="email">Email</label>
+          <input
+            id="email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="you@dal.ca"
+            autoComplete="email"
+            required
+          />
+        </div>
 
-          <div className="field">
-            <label htmlFor="password">Password</label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              minLength={8}
-              required
-            />
-          </div>
+        <PasswordField
+          id="password"
+          label="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          autoComplete="new-password"
+          minLength={8}
+        >
+          <ul className="pw-rules">
+            {passwordRules(password).map((rule) => (
+              <li key={rule.label} className={`pw-rule ${rule.ok ? 'ok' : ''}`}>
+                <span className="pw-rule-mark" aria-hidden="true">
+                  {rule.ok ? '✓' : '•'}
+                </span>
+                {rule.label}
+              </li>
+            ))}
+          </ul>
+        </PasswordField>
 
-          {error && <p className="error-text">{error}</p>}
+        {error && <p className="error-text">{error}</p>}
 
-          <button type="submit" className="btn-primary" disabled={submitting}>
-            {submitting ? 'Creating…' : 'Create Account'}
-          </button>
-        </form>
-
-        <p className="switch-text">Already a user?</p>
-        <button onClick={() => navigate('/login')} className="btn-link">
-          Log In
+        <button type="submit" className="btn-primary" disabled={submitting}>
+          {submitting ? 'Creating…' : 'Create account'}
         </button>
-      </div>
-    </div>
+      </form>
+
+      <p className="auth-alt">
+        Already have an account?
+        <button onClick={() => navigate('/login')} className="btn-link">
+          Sign in
+        </button>
+      </p>
+    </AuthLayout>
   )
 }
 
