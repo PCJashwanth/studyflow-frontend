@@ -1,34 +1,58 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import AdminHeader from './AdminHeader'
-
-// Sample courses (no backend yet). `status` is 'Active' or 'Archived'.
-const sampleCourses = [
-  { id: 1, code: 'CSCI 2110', title: 'Data Structures & Algorithms', instructor: 'Dr. D. Okafor', students: 148, term: 'Fall 2026', status: 'Active' },
-  { id: 2, code: 'CSCI 5709', title: 'Advanced Web Development', instructor: 'Prof. A. Lee', students: 92, term: 'Fall 2026', status: 'Active' },
-  { id: 3, code: 'CSCI 5409', title: 'Cloud Computing', instructor: 'Dr. M. Singh', students: 110, term: 'Fall 2026', status: 'Active' },
-  { id: 4, code: 'CSCI 6515', title: 'Machine Learning', instructor: 'Dr. R. Patel', students: 76, term: 'Fall 2026', status: 'Active' },
-  { id: 5, code: 'CSCI 5408', title: 'Data Management & Warehousing', instructor: 'Prof. K. Brown', students: 64, term: 'Winter 2026', status: 'Archived' },
-  { id: 6, code: 'CSCI 5308', title: 'Advanced Software Development', instructor: 'Dr. J. Wu', students: 88, term: 'Winter 2026', status: 'Archived' },
-]
+import { api } from '../../../lib/api'
 
 function CoursesView() {
-  const [courses, setCourses] = useState(sampleCourses)
+  const [courses, setCourses] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
   const [search, setSearch] = useState('')
+  const [showAdd, setShowAdd] = useState(false)
+  const [form, setForm] = useState({ code: '', title: '', instructorName: '', term: '' })
 
-  // Archive / Restore just flips the status locally for now.
-  function toggleArchive(id) {
-    setCourses((list) =>
-      list.map((c) =>
-        c.id === id ? { ...c, status: c.status === 'Active' ? 'Archived' : 'Active' } : c,
-      ),
-    )
+  useEffect(() => {
+    api
+      .get('/api/admin/courses')
+      .then((r) => setCourses(r.data.courses))
+      .catch((e) => setError(e.response?.data?.error || 'Failed to load courses'))
+      .finally(() => setLoading(false))
+  }, [])
+
+  async function toggleArchive(course) {
+    setError('')
+    const status = course.status === 'ACTIVE' ? 'ARCHIVED' : 'ACTIVE'
+    try {
+      const { data } = await api.patch(`/api/admin/courses/${course.id}`, { status })
+      setCourses((list) => list.map((c) => (c.id === course.id ? data.course : c)))
+    } catch (e) {
+      setError(e.response?.data?.error || 'Could not update course')
+    }
+  }
+
+  async function addCourse(e) {
+    e.preventDefault()
+    setError('')
+    try {
+      const { data } = await api.post('/api/admin/courses', {
+        code: form.code,
+        title: form.title,
+        instructorName: form.instructorName || undefined,
+        term: form.term || undefined,
+      })
+      setCourses((list) => [data.course, ...list])
+      setShowAdd(false)
+      setForm({ code: '', title: '', instructorName: '', term: '' })
+    } catch (err) {
+      const d = err.response?.data
+      setError((d?.details && Object.values(d.details)[0]?.[0]) || d?.error || 'Could not add course')
+    }
   }
 
   const visible = courses.filter(
     (c) =>
       c.code.toLowerCase().includes(search.toLowerCase()) ||
       c.title.toLowerCase().includes(search.toLowerCase()) ||
-      c.instructor.toLowerCase().includes(search.toLowerCase()),
+      (c.instructorName || '').toLowerCase().includes(search.toLowerCase()),
   )
 
   return (
@@ -43,49 +67,70 @@ function CoursesView() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
-          <button className="add-user-btn">+ Add course</button>
+          <button className="add-user-btn" onClick={() => setShowAdd((s) => !s)}>
+            {showAdd ? 'Cancel' : '+ Add course'}
+          </button>
         </div>
 
+        {error && <p className="error-text">{error}</p>}
+
+        {showAdd && (
+          <form className="add-task-form" onSubmit={addCourse}>
+            <input required placeholder="Code (e.g. CSCI 5709)" value={form.code}
+              onChange={(e) => setForm({ ...form, code: e.target.value })} />
+            <input required placeholder="Title" value={form.title}
+              onChange={(e) => setForm({ ...form, title: e.target.value })} />
+            <input placeholder="Instructor" value={form.instructorName}
+              onChange={(e) => setForm({ ...form, instructorName: e.target.value })} />
+            <input placeholder="Term (e.g. Fall 2026)" value={form.term}
+              onChange={(e) => setForm({ ...form, term: e.target.value })} />
+            <button className="btn-cta" type="submit">Save</button>
+          </form>
+        )}
+
         <div className="panel admin-panel">
-          <table className="user-table">
-            <thead>
-              <tr>
-                <th>Code</th>
-                <th>Title</th>
-                <th>Instructor</th>
-                <th>Students</th>
-                <th>Term</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {visible.map((c) => {
-                const isActive = c.status === 'Active'
-                return (
-                  <tr key={c.id}>
-                    <td><strong>{c.code}</strong></td>
-                    <td>{c.title}</td>
-                    <td>{c.instructor}</td>
-                    <td>{c.students}</td>
-                    <td>{c.term}</td>
-                    <td>
-                      <span className={`status-badge ${isActive ? 'active' : 'inactive'}`}>
-                        {c.status}
-                      </span>
-                    </td>
-                    <td>
-                      <button className="table-action">Edit</button>
-                      {/* Active courses can be archived; archived ones can be restored */}
-                      <button className="table-action" onClick={() => toggleArchive(c.id)}>
-                        {isActive ? 'Archive' : 'Restore'}
-                      </button>
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
+          {loading ? (
+            <p className="muted">Loading…</p>
+          ) : (
+            <table className="user-table">
+              <thead>
+                <tr>
+                  <th>Code</th>
+                  <th>Title</th>
+                  <th>Instructor</th>
+                  <th>Students</th>
+                  <th>Term</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {visible.map((c) => {
+                  const isActive = c.status === 'ACTIVE'
+                  return (
+                    <tr key={c.id}>
+                      <td><strong>{c.code}</strong></td>
+                      <td>{c.title}</td>
+                      <td>{c.instructorName || '—'}</td>
+                      <td>{c.students}</td>
+                      <td>{c.term}</td>
+                      <td>
+                        <span className={`status-badge ${isActive ? 'active' : 'inactive'}`}>
+                          {isActive ? 'Active' : 'Archived'}
+                        </span>
+                      </td>
+                      <td>
+                        <button className="table-action" disabled title="Coming soon">Edit</button>
+                        <button className="table-action" onClick={() => toggleArchive(c)}>
+                          {isActive ? 'Archive' : 'Restore'}
+                        </button>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          )}
         </div>
       </div>
     </>

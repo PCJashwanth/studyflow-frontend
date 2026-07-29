@@ -1670,3 +1670,44 @@ button:disabled {
 .audit-action-btn.review { color: #d97706; }
 .audit-action-btn:hover { text-decoration: underline; }
 .audit-none { color: #9ca3af; }
+
+/* helpers for wired views */
+.muted { color: #6b7280; font-size: 14px; padding: 8px 0; }
+
+.add-task-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+  align-items: center;
+}
+.add-task-form input,
+.add-task-form select {
+  padding: 8px 10px;
+  border: 1.5px solid #ddd;
+  border-radius: 8px;
+  font-size: 14px;
+}
+.add-task-form input[type='text'],
+.add-task-form input:not([type]) {
+  flex: 1;
+  min-width: 160px;
+}
+
+.kanban-move {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+.kanban-move-btn {
+  border: 1px solid #d1d5db;
+  background: #fff;
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-size: 12px;
+  cursor: pointer;
+  color: #374151;
+}
+.kanban-move-btn:hover:not(:disabled) {
+  background: #f3f4f6;
+}

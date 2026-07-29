@@ -1,52 +1,84 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import PageHeader from './PageHeader'
+import { api } from '../../../lib/api'
 
-// Sample data for now (there's no backend yet). Each course has a colour and
-// a list of tasks. Later this will come from the API instead of being hardcoded.
-const courses = [
-  {
-    code: 'CSCI 5709',
-    name: 'Advanced Web Development',
-    color: 'green',
-    tasks: [
-      { id: 1, title: 'Lab 4 — TenantTrails feature build', priority: 'High', status: 'In progress', due: 'Fri' },
-      { id: 2, title: 'StudyFlow proposal review', priority: 'Med', status: 'Done', due: 'Done' },
-    ],
-  },
-  {
-    code: 'CSCI 5409',
-    name: 'Cloud Computing',
-    color: 'blue',
-    tasks: [
-      { id: 3, title: 'Assignment 3 — VPC + RDS lab', priority: 'High', status: 'Not started', due: 'Fri' },
-      { id: 4, title: 'Reading quiz — object storage', priority: 'Low', status: 'Not started', due: 'Mon' },
-    ],
-  },
-  {
-    code: 'CSCI 6515',
-    name: 'Machine Learning',
-    color: 'purple',
-    tasks: [
-      { id: 5, title: 'Olist late-delivery — final report', priority: 'Med', status: 'In progress', due: 'Fri' },
-    ],
-  },
-]
-
-// Turn a priority/status word into the matching CSS class.
-// The badge colours (.high/.medium/.low) are defined in App.css.
-const priorityClass = (p) => ({ High: 'high', Med: 'medium', Low: 'low' }[p])
-const statusClass = (s) => s.toLowerCase().replace(' ', '') // "inprogress" | "done" | "notstarted"
+// Map backend enums <-> the labels/classes the UI already styles in App.css.
+const PRIORITY_LABEL = { HIGH: 'High', MEDIUM: 'Med', LOW: 'Low' }
+const STATUS_LABEL = {
+  NOT_STARTED: 'Not started',
+  IN_PROGRESS: 'In progress',
+  COMPLETE: 'Done',
+  SKIPPED: 'Skipped',
+}
+const COURSE_COLORS = ['green', 'blue', 'purple', 'orange']
+const priorityClass = (label) => ({ High: 'high', Med: 'medium', Low: 'low' }[label] || 'low')
+const statusClass = (label) => label.toLowerCase().replace(/\s/g, '')
+const weekday = (d) => new Date(d).toLocaleDateString('en-US', { weekday: 'short' })
 
 function CoursesTasksView() {
+  const [courses, setCourses] = useState([])
+  const [tasks, setTasks] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
   const [search, setSearch] = useState('')
-  const [filter, setFilter] = useState('All') // "All" | "In progress" | "High priority"
+  const [filter, setFilter] = useState('All')
 
-  // Decide whether a task should be shown, based on the search box + filter pill.
+  const [showAdd, setShowAdd] = useState(false)
+  const [form, setForm] = useState({ courseId: '', title: '', priority: 'MEDIUM', deadline: '' })
+
+  useEffect(() => {
+    Promise.all([api.get('/api/courses'), api.get('/api/tasks')])
+      .then(([c, t]) => {
+        setCourses(c.data.courses)
+        setTasks(t.data.tasks)
+      })
+      .catch((e) => setError(e.response?.data?.error || 'Failed to load courses and tasks'))
+      .finally(() => setLoading(false))
+  }, [])
+
+  async function toggleDone(task) {
+    const next = task.status === 'COMPLETE' ? 'NOT_STARTED' : 'COMPLETE'
+    try {
+      const { data } = await api.patch(`/api/tasks/${task.id}`, { status: next })
+      setTasks((list) => list.map((x) => (x.id === task.id ? data.task : x)))
+    } catch (e) {
+      setError(e.response?.data?.error || 'Could not update task')
+    }
+  }
+
+  async function remove(task) {
+    try {
+      await api.delete(`/api/tasks/${task.id}`)
+      setTasks((list) => list.filter((x) => x.id !== task.id))
+    } catch (e) {
+      setError(e.response?.data?.error || 'Could not delete task')
+    }
+  }
+
+  async function addTask(e) {
+    e.preventDefault()
+    setError('')
+    try {
+      const { data } = await api.post('/api/tasks', {
+        courseId: form.courseId,
+        title: form.title,
+        priority: form.priority,
+        deadline: form.deadline,
+      })
+      setTasks((list) => [...list, data.task])
+      setShowAdd(false)
+      setForm({ courseId: '', title: '', priority: 'MEDIUM', deadline: '' })
+    } catch (err) {
+      const d = err.response?.data
+      setError((d?.details && Object.values(d.details)[0]?.[0]) || d?.error || 'Could not add task')
+    }
+  }
+
   function taskMatches(task) {
     const matchesSearch = task.title.toLowerCase().includes(search.toLowerCase())
     let matchesFilter = true
-    if (filter === 'In progress') matchesFilter = task.status === 'In progress'
-    if (filter === 'High priority') matchesFilter = task.priority === 'High'
+    if (filter === 'In progress') matchesFilter = task.status === 'IN_PROGRESS'
+    if (filter === 'High priority') matchesFilter = task.priority === 'HIGH'
     return matchesSearch && matchesFilter
   }
 
@@ -54,7 +86,6 @@ function CoursesTasksView() {
     <>
       <PageHeader title="Courses & Tasks" />
       <div className="page-body">
-        {/* Search + filter pills + Add task button */}
         <div className="tasks-toolbar">
           <input
             className="task-search-input"
@@ -72,39 +103,86 @@ function CoursesTasksView() {
             </button>
           ))}
           <span className="toolbar-spacer" />
-          {/* Not wired up yet — will open an "add task" form once the backend exists */}
-          <button className="btn-cta">+ Add task</button>
+          <button className="btn-cta" onClick={() => setShowAdd((s) => !s)}>
+            {showAdd ? 'Cancel' : '+ Add task'}
+          </button>
         </div>
 
-        {/* One group per course */}
-        {courses.map((course) => {
-          const visibleTasks = course.tasks.filter(taskMatches)
-          // Hide a whole course if none of its tasks match the search/filter
-          if (visibleTasks.length === 0) return null
+        {error && <p className="error-text">{error}</p>}
 
-          return (
-            <div key={course.code} className="course-group">
-              <div className="course-group-title">
-                <span className={`course-dot ${course.color}`} />
-                {course.code} · {course.name}
-              </div>
-
-              {visibleTasks.map((task) => (
-                <div key={task.id} className="task-row">
-                  <input type="checkbox" className="task-check" defaultChecked={task.status === 'Done'} />
-                  <span className={`task-title ${task.status === 'Done' ? 'done' : ''}`}>{task.title}</span>
-                  <span className={`priority-badge ${priorityClass(task.priority)}`}>{task.priority}</span>
-                  <span className={`task-status ${statusClass(task.status)}`}>{task.status}</span>
-                  <span className="task-due">{task.due === 'Done' ? '✓ Done' : `Due ${task.due}`}</span>
-                  <span className="task-icons">
-                    <button className="task-icon-btn" title="Copy link">🔗</button>
-                    <button className="task-icon-btn" title="Delete">🗑️</button>
-                  </span>
-                </div>
+        {showAdd && (
+          <form className="add-task-form" onSubmit={addTask}>
+            <select
+              required
+              value={form.courseId}
+              onChange={(e) => setForm({ ...form, courseId: e.target.value })}
+            >
+              <option value="">Select course…</option>
+              {courses.map((c) => (
+                <option key={c.id} value={c.id}>{c.code} · {c.title}</option>
               ))}
-            </div>
-          )
-        })}
+            </select>
+            <input
+              required
+              placeholder="Task title"
+              value={form.title}
+              onChange={(e) => setForm({ ...form, title: e.target.value })}
+            />
+            <select value={form.priority} onChange={(e) => setForm({ ...form, priority: e.target.value })}>
+              <option value="LOW">Low</option>
+              <option value="MEDIUM">Med</option>
+              <option value="HIGH">High</option>
+            </select>
+            <input
+              required
+              type="date"
+              value={form.deadline}
+              onChange={(e) => setForm({ ...form, deadline: e.target.value })}
+            />
+            <button className="btn-cta" type="submit">Save</button>
+          </form>
+        )}
+
+        {loading ? (
+          <p className="muted">Loading…</p>
+        ) : (
+          courses.map((course, i) => {
+            const courseTasks = tasks.filter((t) => t.courseId === course.id).filter(taskMatches)
+            if (courseTasks.length === 0) return null
+
+            return (
+              <div key={course.id} className="course-group">
+                <div className="course-group-title">
+                  <span className={`course-dot ${COURSE_COLORS[i % COURSE_COLORS.length]}`} />
+                  {course.code} · {course.title}
+                </div>
+
+                {courseTasks.map((task) => {
+                  const pLabel = PRIORITY_LABEL[task.priority]
+                  const sLabel = STATUS_LABEL[task.status]
+                  const done = task.status === 'COMPLETE'
+                  return (
+                    <div key={task.id} className="task-row">
+                      <input
+                        type="checkbox"
+                        className="task-check"
+                        checked={done}
+                        onChange={() => toggleDone(task)}
+                      />
+                      <span className={`task-title ${done ? 'done' : ''}`}>{task.title}</span>
+                      <span className={`priority-badge ${priorityClass(pLabel)}`}>{pLabel}</span>
+                      <span className={`task-status ${statusClass(sLabel)}`}>{sLabel}</span>
+                      <span className="task-due">{done ? '✓ Done' : `Due ${weekday(task.deadline)}`}</span>
+                      <span className="task-icons">
+                        <button className="task-icon-btn" title="Delete" onClick={() => remove(task)}>🗑️</button>
+                      </span>
+                    </div>
+                  )
+                })}
+              </div>
+            )
+          })
+        )}
       </div>
     </>
   )
