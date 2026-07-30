@@ -26,6 +26,9 @@ function CoursesTasksView() {
   const [showAdd, setShowAdd] = useState(false)
   const [form, setForm] = useState({ courseId: '', title: '', priority: 'MEDIUM', deadline: '' })
 
+  const [showAddCourse, setShowAddCourse] = useState(false)
+  const [courseForm, setCourseForm] = useState({ code: '', title: '', instructorName: '', creditHours: '' })
+
   useEffect(() => {
     Promise.all([api.get('/api/courses'), api.get('/api/tasks')])
       .then(([c, t]) => {
@@ -74,6 +77,25 @@ function CoursesTasksView() {
     }
   }
 
+  async function addCourse(e) {
+    e.preventDefault()
+    setError('')
+    try {
+      const { data } = await api.post('/api/courses', {
+        code: courseForm.code,
+        title: courseForm.title,
+        instructorName: courseForm.instructorName || undefined,
+        creditHours: courseForm.creditHours ? Number(courseForm.creditHours) : undefined,
+      })
+      setCourses((list) => [data.course, ...list])
+      setShowAddCourse(false)
+      setCourseForm({ code: '', title: '', instructorName: '', creditHours: '' })
+    } catch (err) {
+      const d = err.response?.data
+      setError((d?.details && Object.values(d.details)[0]?.[0]) || d?.error || 'Could not add course')
+    }
+  }
+
   function taskMatches(task) {
     const matchesSearch = task.title.toLowerCase().includes(search.toLowerCase())
     let matchesFilter = true
@@ -103,12 +125,29 @@ function CoursesTasksView() {
             </button>
           ))}
           <span className="toolbar-spacer" />
-          <button className="btn-cta" onClick={() => setShowAdd((s) => !s)}>
+          <button className="btn-cta" onClick={() => { setShowAddCourse((s) => !s); setShowAdd(false) }}>
+            {showAddCourse ? 'Cancel' : '+ Add course'}
+          </button>
+          <button className="btn-cta" disabled={courses.length === 0} title={courses.length === 0 ? 'Add a course first' : ''} onClick={() => { setShowAdd((s) => !s); setShowAddCourse(false) }}>
             {showAdd ? 'Cancel' : '+ Add task'}
           </button>
         </div>
 
         {error && <p className="error-text">{error}</p>}
+
+        {showAddCourse && (
+          <form className="add-task-form" onSubmit={addCourse}>
+            <input required placeholder="Course code (e.g. CSCI 5709)" value={courseForm.code}
+              onChange={(e) => setCourseForm({ ...courseForm, code: e.target.value })} />
+            <input required placeholder="Course title" value={courseForm.title}
+              onChange={(e) => setCourseForm({ ...courseForm, title: e.target.value })} />
+            <input placeholder="Instructor (optional)" value={courseForm.instructorName}
+              onChange={(e) => setCourseForm({ ...courseForm, instructorName: e.target.value })} />
+            <input type="number" min="0" max="12" placeholder="Credits" style={{ width: 90 }} value={courseForm.creditHours}
+              onChange={(e) => setCourseForm({ ...courseForm, creditHours: e.target.value })} />
+            <button className="btn-cta" type="submit">Save course</button>
+          </form>
+        )}
 
         {showAdd && (
           <form className="add-task-form" onSubmit={addTask}>
@@ -145,10 +184,13 @@ function CoursesTasksView() {
 
         {loading ? (
           <p className="muted">Loading…</p>
+        ) : courses.length === 0 ? (
+          <p className="muted">No courses yet. Click “+ Add course” to get started.</p>
         ) : (
           courses.map((course, i) => {
+            const hasFilter = search !== '' || filter !== 'All'
             const courseTasks = tasks.filter((t) => t.courseId === course.id).filter(taskMatches)
-            if (courseTasks.length === 0) return null
+            if (hasFilter && courseTasks.length === 0) return null
 
             return (
               <div key={course.id} className="course-group">
@@ -157,7 +199,9 @@ function CoursesTasksView() {
                   {course.code} · {course.title}
                 </div>
 
-                {courseTasks.map((task) => {
+                {courseTasks.length === 0 ? (
+                  <p className="muted" style={{ paddingLeft: 8 }}>No tasks yet.</p>
+                ) : courseTasks.map((task) => {
                   const pLabel = PRIORITY_LABEL[task.priority]
                   const sLabel = STATUS_LABEL[task.status]
                   const done = task.status === 'COMPLETE'
