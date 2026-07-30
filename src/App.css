@@ -1442,6 +1442,17 @@ button:disabled {
 }
 .cal-month-cell.empty { background-color: #fafbfc; border-style: dashed; }
 .cal-month-cell.today { border-color: #2e6db4; background-color: #eef4fb; font-weight: 700; }
+/* Small "n due" badge on month days that have deadlines */
+.cal-month-count {
+  display: block;
+  margin-top: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #b91c1c;
+  background-color: #fdeaea;
+  border-radius: 4px;
+  padding: 1px 4px;
+}
 
 /* ── Kanban ── */
 .kanban-board {
