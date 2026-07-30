@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import DashboardView from './views/DashboardView'
 import CoursesTasksView from './views/CoursesTasksView'
+import RequestsView from './views/RequestsView'
 import AvailabilityView from './views/AvailabilityView'
 import CalendarView from './views/CalendarView'
 import KanbanView from './views/KanbanView'
@@ -14,6 +15,7 @@ import SettingsView from './views/SettingsView'
 const views = {
   Dashboard: DashboardView,
   'Courses & Tasks': CoursesTasksView,
+  Requests: RequestsView,
   Availability: AvailabilityView,
   Calendar: CalendarView,
   Kanban: KanbanView,
@@ -24,7 +26,7 @@ const views = {
 
 // These show up in the sidebar. "Settings" is intentionally left out — it opens
 // from the profile menu at the bottom-left instead.
-const navItems = ['Dashboard', 'Courses & Tasks', 'Availability', 'Calendar', 'Kanban', 'AI Schedule', 'Reflection']
+const navItems = ['Dashboard', 'Courses & Tasks', 'Requests', 'Availability', 'Calendar', 'Kanban', 'AI Schedule', 'Reflection']
 
 function initialsOf(name) {
   return name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase()

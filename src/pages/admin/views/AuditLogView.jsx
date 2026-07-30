@@ -1,54 +1,82 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import AdminHeader from './AdminHeader'
+import { api } from '../../../lib/api'
 
-// Sample audit entries (no backend yet).
-//   category → which filter tab it belongs to ('user' | 'course' | 'security')
-//   right    → the link on the far right ('reverse' | 'review' | none)
-//   color    → the actor avatar colour
-const sampleEntries = [
-  { id: 1, when: '2 min ago', actor: 'Admin', initials: 'AD', color: 'red', action: 'Deactivated account', affected: 'jdoe@dal.ca', category: 'user', right: 'reverse' },
-  { id: 2, when: '18 min ago', actor: 'Admin', initials: 'AD', color: 'red', action: 'Changed role → Instructor', affected: 'a.lee@dal.ca', category: 'user', right: 'reverse' },
-  { id: 3, when: '1 h ago', actor: 'System', initials: 'SY', color: 'grey', action: 'Analytics cohort threshold set to 10', affected: 'Platform', category: 'security', right: null },
-  { id: 4, when: '3 h ago', actor: 'Dr. Okafor', initials: 'DO', color: 'purple', action: 'Rescheduled A3 deadline', affected: 'CSCI 2110', category: 'course', right: null },
-  { id: 5, when: 'Today 09:14', actor: 'Admin', initials: 'AD', color: 'red', action: 'Created course', affected: 'CSCI 2110', category: 'course', right: null },
-  { id: 6, when: 'Yesterday', actor: 'System', initials: 'SY', color: 'grey', action: 'Sign-in from a new device', affected: 'maya.t@dal.ca', category: 'security', right: 'review' },
-  { id: 7, when: 'Mar 2', actor: 'Admin', initials: 'AD', color: 'red', action: 'Reset password', affected: 's.kumar@dal.ca', category: 'security', right: null },
-]
+const COLORS = ['red', 'purple', 'orange', 'green', 'blue']
 
-// The filter tabs. Each maps to the categories it should show.
-const filters = [
-  { label: 'All', match: () => true },
-  { label: 'User changes', match: (e) => e.category === 'user' },
-  { label: 'Course changes', match: (e) => e.category === 'course' },
-  { label: 'Security', match: (e) => e.category === 'security' },
-]
+function initialsOf(name) {
+  return name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase()
+}
+function titleCase(s) {
+  return s ? s.charAt(0) + s.slice(1).toLowerCase() : ''
+}
+
+function relativeTime(iso) {
+  const min = Math.floor((Date.now() - new Date(iso).getTime()) / 60000)
+  if (min < 1) return 'just now'
+  if (min < 60) return `${min} min ago`
+  const hr = Math.floor(min / 60)
+  if (hr < 24) return `${hr} h ago`
+  const day = Math.floor(hr / 24)
+  if (day === 1) return 'Yesterday'
+  if (day < 7) return `${day} d ago`
+  return new Date(iso).toLocaleDateString()
+}
+
+// Turn a backend audit action + meta into a readable sentence.
+function describe(entry) {
+  switch (entry.action) {
+    case 'ROLE_CHANGED':
+      return `Changed role → ${titleCase(entry.meta?.to)}`
+    case 'ACCOUNT_DEACTIVATED':
+      return 'Deactivated account'
+    case 'ACCOUNT_ACTIVATED':
+      return 'Activated account'
+    default:
+      return entry.action
+  }
+}
+
+// All current backend actions are user-account changes.
+const filters = ['All', 'User changes', 'Course changes', 'Security']
 
 function AuditLogView() {
+  const [logs, setLogs] = useState([])
+  const [emailById, setEmailById] = useState({})
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
   const [activeFilter, setActiveFilter] = useState('All')
   const [range, setRange] = useState('Last 30 days')
 
-  const current = filters.find((f) => f.label === activeFilter)
-  const visible = sampleEntries.filter(current.match)
+  useEffect(() => {
+    Promise.all([api.get('/api/admin/audit-logs'), api.get('/api/admin/users')])
+      .then(([l, u]) => {
+        setLogs(l.data.auditLogs)
+        setEmailById(Object.fromEntries(u.data.users.map((x) => [x.id, x.email])))
+      })
+      .catch((e) => setError(e.response?.data?.error || 'Failed to load audit log'))
+      .finally(() => setLoading(false))
+  }, [])
+
+  // Only "User changes" has real data; other tabs are empty for now.
+  const visible = logs.filter(() => activeFilter === 'All' || activeFilter === 'User changes')
 
   return (
     <>
       <AdminHeader title="Audit Log" />
       <div className="page-body">
         <div className="audit-toolbar">
-          {/* Filter tabs on the left */}
           <div className="audit-filters">
             {filters.map((f) => (
               <button
-                key={f.label}
-                className={`filter-pill ${activeFilter === f.label ? 'active' : ''}`}
-                onClick={() => setActiveFilter(f.label)}
+                key={f}
+                className={`filter-pill ${activeFilter === f ? 'active' : ''}`}
+                onClick={() => setActiveFilter(f)}
               >
-                {f.label}
+                {f}
               </button>
             ))}
           </div>
-
-          {/* Date range on the right (visual for now — doesn't actually filter by date) */}
           <select className="course-select" value={range} onChange={(e) => setRange(e.target.value)}>
             <option>Last 7 days</option>
             <option>Last 30 days</option>
@@ -56,39 +84,44 @@ function AuditLogView() {
           </select>
         </div>
 
+        {error && <p className="error-text">{error}</p>}
+
         <div className="panel admin-panel">
-          <table className="user-table">
-            <thead>
-              <tr>
-                <th>When</th>
-                <th>Actor</th>
-                <th>Action</th>
-                <th>Affected</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {visible.map((e) => (
-                <tr key={e.id}>
-                  <td className="audit-when">{e.when}</td>
-                  <td>
-                    <div className="audit-actor">
-                      <div className={`table-avatar ${e.color}`}>{e.initials}</div>
-                      <span>{e.actor}</span>
-                    </div>
-                  </td>
-                  <td>{e.action}</td>
-                  <td className="audit-affected">{e.affected}</td>
-                  <td>
-                    {/* Reverse (blue), Review (amber), or a plain dash if nothing to do */}
-                    {e.right === 'reverse' && <button className="audit-action-btn reverse">Reverse</button>}
-                    {e.right === 'review' && <button className="audit-action-btn review">Review</button>}
-                    {!e.right && <span className="audit-none">—</span>}
-                  </td>
+          {loading ? (
+            <p className="muted">Loading…</p>
+          ) : (
+            <table className="user-table">
+              <thead>
+                <tr>
+                  <th>When</th>
+                  <th>Actor</th>
+                  <th>Action</th>
+                  <th>Affected</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {visible.length === 0 ? (
+                  <tr><td colSpan="4" className="audit-none">No entries.</td></tr>
+                ) : (
+                  visible.map((e, i) => (
+                    <tr key={e.id}>
+                      <td className="audit-when">{relativeTime(e.createdAt)}</td>
+                      <td>
+                        <div className="audit-actor">
+                          <div className={`table-avatar ${COLORS[i % COLORS.length]}`}>
+                            {initialsOf(e.actor.fullName)}
+                          </div>
+                          <span>{e.actor.fullName}</span>
+                        </div>
+                      </td>
+                      <td>{describe(e)}</td>
+                      <td className="audit-affected">{emailById[e.targetId] || e.targetId || '—'}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          )}
         </div>
       </div>
     </>

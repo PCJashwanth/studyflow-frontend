@@ -1,16 +1,10 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import AdminHeader from './AdminHeader'
+import { api } from '../../../lib/api'
+import { useAuth } from '../../../context/AuthContext'
 
 const ROLE_OPTIONS = ['STUDENT', 'INSTRUCTOR', 'ADMIN']
-
-// Sample users (no backend yet). `color` just picks the avatar colour.
-const sampleUsers = [
-  { id: 1, fullName: 'Maya Thompson', email: 'maya.t@dal.ca', role: 'STUDENT', isActive: true, color: 'blue' },
-  { id: 2, fullName: 'Dr. D. Okafor', email: 'd.okafor@dal.ca', role: 'INSTRUCTOR', isActive: true, color: 'purple' },
-  { id: 3, fullName: 'Ragen Running', email: 'ragen.r@dal.ca', role: 'STUDENT', isActive: true, color: 'orange' },
-  { id: 4, fullName: 'J. Doe', email: 'jdoe@dal.ca', role: 'STUDENT', isActive: false, color: 'grey' },
-  { id: 5, fullName: 'Sidhant Kumar', email: 's.kumar@dal.ca', role: 'STUDENT', isActive: true, color: 'green' },
-]
+const COLORS = ['blue', 'purple', 'orange', 'green', 'grey']
 
 function initialsOf(name) {
   return name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase()
@@ -21,19 +15,39 @@ function titleCase(role) {
 }
 
 function UsersView() {
-  const [users, setUsers] = useState(sampleUsers)
+  const { user: me } = useAuth()
+  const [users, setUsers] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
   const [search, setSearch] = useState('')
-  // The user waiting for deactivation confirmation. null = modal closed.
   const [confirmUser, setConfirmUser] = useState(null)
 
-  // Change a user's role right in the table (local only for now).
-  function changeRole(id, role) {
-    setUsers((list) => list.map((u) => (u.id === id ? { ...u, role } : u)))
+  useEffect(() => {
+    api
+      .get('/api/admin/users')
+      .then((r) => setUsers(r.data.users))
+      .catch((e) => setError(e.response?.data?.error || 'Failed to load users'))
+      .finally(() => setLoading(false))
+  }, [])
+
+  async function changeRole(id, role) {
+    setError('')
+    try {
+      const { data } = await api.patch(`/api/admin/users/${id}/role`, { role })
+      setUsers((list) => list.map((u) => (u.id === id ? data.user : u)))
+    } catch (e) {
+      setError(e.response?.data?.error || 'Could not change role')
+    }
   }
 
-  // Confirm button inside the modal — flip the user to inactive and close.
-  function confirmDeactivate() {
-    setUsers((list) => list.map((u) => (u.id === confirmUser.id ? { ...u, isActive: false } : u)))
+  async function setStatus(u, isActive) {
+    setError('')
+    try {
+      const { data } = await api.patch(`/api/admin/users/${u.id}/status`, { isActive })
+      setUsers((list) => list.map((x) => (x.id === u.id ? data.user : x)))
+    } catch (e) {
+      setError(e.response?.data?.error || 'Could not update status')
+    }
     setConfirmUser(null)
   }
 
@@ -47,7 +61,6 @@ function UsersView() {
     <>
       <AdminHeader title="User Management" />
       <div className="page-body">
-        {/* Search + add button sit above the table */}
         <div className="admin-toolbar">
           <input
             type="text"
@@ -56,64 +69,87 @@ function UsersView() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
-          <button className="add-user-btn">+ Add user</button>
+          <button className="add-user-btn" disabled title="Coming soon">+ Add user</button>
         </div>
 
+        {error && <p className="error-text">{error}</p>}
+
         <div className="panel admin-panel">
-          <table className="user-table">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Role</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {visible.map((u) => (
-                <tr key={u.id}>
-                  <td>
-                    <div className="table-user">
-                      <div className={`table-avatar ${u.color}`}>{initialsOf(u.fullName)}</div>
-                      <span>{u.fullName}</span>
-                    </div>
-                  </td>
-                  <td>{u.email}</td>
-                  <td>
-                    <select
-                      className="role-select"
-                      value={u.role}
-                      onChange={(e) => changeRole(u.id, e.target.value)}
-                    >
-                      {ROLE_OPTIONS.map((r) => (
-                        <option key={r} value={r}>{titleCase(r)}</option>
-                      ))}
-                    </select>
-                  </td>
-                  <td>
-                    <span className={`status-badge ${u.isActive ? 'active' : 'inactive'}`}>
-                      {u.isActive ? 'Active' : 'Inactive'}
-                    </span>
-                  </td>
-                  <td>
-                    <button className="table-action">Edit</button>
-                    {/* Opens the confirmation modal instead of deactivating right away */}
-                    <button className="table-action danger" onClick={() => setConfirmUser(u)}>
-                      Deactivate
-                    </button>
-                  </td>
+          {loading ? (
+            <p className="muted">Loading…</p>
+          ) : (
+            <table className="user-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Role</th>
+                  <th>Status</th>
+                  <th>Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {visible.map((u, i) => {
+                  const isSelf = u.id === me.id
+                  return (
+                    <tr key={u.id}>
+                      <td>
+                        <div className="table-user">
+                          <div className={`table-avatar ${COLORS[i % COLORS.length]}`}>
+                            {initialsOf(u.fullName)}
+                          </div>
+                          <span>{u.fullName}{isSelf ? ' (you)' : ''}</span>
+                        </div>
+                      </td>
+                      <td>{u.email}</td>
+                      <td>
+                        <select
+                          className="role-select"
+                          value={u.role}
+                          disabled={isSelf}
+                          onChange={(e) => changeRole(u.id, e.target.value)}
+                        >
+                          {ROLE_OPTIONS.map((r) => (
+                            <option key={r} value={r}>{titleCase(r)}</option>
+                          ))}
+                        </select>
+                      </td>
+                      <td>
+                        <span className={`status-badge ${u.isActive ? 'active' : 'inactive'}`}>
+                          {u.isActive ? 'Active' : 'Inactive'}
+                        </span>
+                      </td>
+                      <td>
+                        <button className="table-action" disabled title="Coming soon">Edit</button>
+                        {u.isActive ? (
+                          <button
+                            className="table-action danger"
+                            disabled={isSelf}
+                            onClick={() => setConfirmUser(u)}
+                          >
+                            Deactivate
+                          </button>
+                        ) : (
+                          <button
+                            className="table-action"
+                            disabled={isSelf}
+                            onClick={() => setStatus(u, true)}
+                          >
+                            Activate
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          )}
         </div>
       </div>
 
-      {/* Confirmation modal — only rendered when a user is pending deactivation */}
       {confirmUser && (
         <div className="modal-overlay" onClick={() => setConfirmUser(null)}>
-          {/* stopPropagation so clicking inside the box doesn't close it */}
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-icon">⚠️</div>
             <h3 className="modal-title">Deactivate this account?</h3>
@@ -123,7 +159,7 @@ function UsersView() {
             </p>
             <div className="modal-actions">
               <button className="btn-outline" onClick={() => setConfirmUser(null)}>Cancel</button>
-              <button className="btn-danger" onClick={confirmDeactivate}>Deactivate</button>
+              <button className="btn-danger" onClick={() => setStatus(confirmUser, false)}>Deactivate</button>
             </div>
           </div>
         </div>

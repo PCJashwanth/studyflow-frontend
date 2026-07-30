@@ -1,5 +1,3 @@
-import { useState } from 'react'
-import { AuthProvider, useAuth } from './context/AuthContext'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
 import StudentDashboard from './pages/Student/StudentDashboard'
@@ -10,7 +8,6 @@ import ProtectedRoute from './components/ProtectedRoute'
 import RoleRoute from './components/RoleRoute'
 import DashboardRedirect from './components/DashboardRedirect'
 import './App.css'
-import { BrowserRouter } from 'react-router-dom'
 
 function AppRoutes() {
   return (

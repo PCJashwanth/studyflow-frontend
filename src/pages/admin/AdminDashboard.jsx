@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import UsersView from './views/UsersView'
 import CoursesView from './views/CoursesView'
+import RequestsView from './views/RequestsView'
 import AuditLogView from './views/AuditLogView'
 import SettingsView from './views/SettingsView'
 
@@ -9,10 +10,11 @@ import SettingsView from './views/SettingsView'
 const views = {
   Users: UsersView,
   Courses: CoursesView,
+  Requests: RequestsView,
   'Audit log': AuditLogView,
   Settings: SettingsView,
 }
-const navItems = ['Users', 'Courses', 'Audit log']
+const navItems = ['Users', 'Courses', 'Requests', 'Audit log']
 
 function initialsOf(name) {
   return name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase()
@@ -79,7 +81,7 @@ function AdminDashboard() {
       </aside>
 
       <main className="main-area" onClick={() => setShowPopup(false)}>
-        <ActiveView />
+        <ActiveView onNavigate={setActivePage} />
       </main>
     </div>
   )
