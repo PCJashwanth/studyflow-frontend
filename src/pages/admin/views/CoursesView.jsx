@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import AdminHeader from './AdminHeader'
 import { api } from '../../../lib/api'
 
-function CoursesView() {
+function CoursesView({ onNavigate }) {
   const [courses, setCourses] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -67,6 +67,7 @@ function CoursesView() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
+          <button className="table-action" onClick={() => onNavigate?.('Requests')}>Requests</button>
           <button className="add-user-btn" onClick={() => setShowAdd((s) => !s)}>
             {showAdd ? 'Cancel' : '+ Add course'}
           </button>

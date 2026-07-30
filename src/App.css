@@ -1711,3 +1711,29 @@ button:disabled {
 .kanban-move-btn:hover:not(:disabled) {
   background: #f3f4f6;
 }
+
+/* enroll-from-catalog panel */
+.enroll-panel {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 16px;
+}
+.enroll-panel .task-search-input { width: 100%; margin-bottom: 10px; }
+.enroll-list { display: flex; flex-direction: column; gap: 6px; max-height: 300px; overflow-y: auto; }
+.enroll-row {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; padding: 8px 10px; border-radius: 8px; font-size: 14px;
+}
+.enroll-row:hover { background: #f9fafb; }
+.enroll-empty {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 10px; color: #6b7280; font-size: 14px; background: #fef3c7; border-radius: 8px;
+}
+
+/* request status badges (student + admin requests pages) */
+.req-badge { font-size: 12px; font-weight: 600; padding: 2px 10px; border-radius: 999px; }
+.req-badge.pending { background: #fef3c7; color: #b45309; }
+.req-badge.approved { background: #dcfce7; color: #15803d; }
+.req-badge.rejected { background: #fee2e2; color: #b91c1c; }
