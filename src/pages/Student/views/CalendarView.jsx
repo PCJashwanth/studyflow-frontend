@@ -1,29 +1,86 @@
-//Contains sample data now to show how it would look like when is wired with backend and has some real data
-import { useState } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import PageHeader from './PageHeader'
+import { api } from '../../../lib/api'
 
-const days = ['Mon 1', 'Tue 2', 'Wed 3', 'Thu 4', 'Fri 5', 'Sat 6', 'Sun 7']
+const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 const times = ['8:00', '10:00', '12:00', '14:00', '16:00', '18:00', '20:00', '22:00']
 
-// Sample events. `day` is 0–6 (Mon–Sun), `time` matches one of the labels above.
-// `type` picks the colour: "class" (blue), "study" (green) or "deadline" (red).
-// Study blocks also get a `why` explanation that shows on hover.
-const events = [
-  { id: 1, day: 4, time: '8:00', type: 'deadline', title: '⚠ 3 deadlines', sub: 'due today' },
-  { id: 2, day: 0, time: '10:00', type: 'class', title: 'CSCI 5409', sub: 'Lecture' },
-  { id: 3, day: 2, time: '10:00', type: 'class', title: 'CSCI 5709', sub: 'Lab' },
-  { id: 4, day: 0, time: '18:00', type: 'study', title: 'Study: Cloud', sub: '2h', why: 'Deadline is Friday · you marked evenings as high-focus · 6h estimated effort.' },
-  { id: 5, day: 1, time: '20:00', type: 'study', title: 'Study: 5709', sub: 'AI block', why: 'Deadline is Friday · you marked evenings as high-focus · 6h estimated effort.' },
-  { id: 6, day: 4, time: '18:00', type: 'study', title: 'Study: Olist', sub: '', why: 'Placed on a free evening before the Friday deadline.' },
-]
+// Each row covers two hours, so a deadline at 21:00 lands in the 20:00 row.
+const slotHours = [8, 10, 12, 14, 16, 18, 20, 22]
 
-// Days of June 2026 for the simple month view. June 1st, 2026 is a Monday,
-// so we start the grid with 0 empty cells before day 1.
-const JUNE_2026_DAYS = 30
-const JUNE_2026_START_OFFSET = 0
+function slotIndexFor(date) {
+  const hour = date.getHours()
+  let index = 0
+  for (let i = 0; i < slotHours.length; i++) {
+    if (hour >= slotHours[i]) index = i
+  }
+  return index // anything before 8am shows in the first row
+}
+
+// Monday of the week the given date falls in.
+function mondayOf(date) {
+  const d = new Date(date)
+  d.setHours(0, 0, 0, 0)
+  d.setDate(d.getDate() - ((d.getDay() + 6) % 7)) // getDay is Sun-based, we want Mon
+  return d
+}
+
+function addDays(date, n) {
+  const d = new Date(date)
+  d.setDate(d.getDate() + n)
+  return d
+}
+
+function sameDay(a, b) {
+  return (
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+  )
+}
+
+const monthNames = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+]
 
 function CalendarView() {
   const [view, setView] = useState('Week') // "Week" or "Month"
+  const [anchor, setAnchor] = useState(() => new Date()) // any date inside the shown range
+  const [tasks, setTasks] = useState([])
+  const [error, setError] = useState('')
+
+  const weekStart = useMemo(() => mondayOf(anchor), [anchor])
+
+  // The span we need tasks for: the visible week, or the whole visible month.
+  const range = useMemo(() => {
+    if (view === 'Week') return { from: weekStart, to: addDays(weekStart, 7) }
+    const first = new Date(anchor.getFullYear(), anchor.getMonth(), 1)
+    const afterLast = new Date(anchor.getFullYear(), anchor.getMonth() + 1, 1)
+    return { from: first, to: afterLast }
+  }, [view, weekStart, anchor])
+
+  useEffect(() => {
+    api
+      .get('/api/tasks', {
+        params: { from: range.from.toISOString(), to: range.to.toISOString() },
+      })
+      .then((r) => setTasks(r.data.tasks))
+      .catch((e) => setError(e.response?.data?.error || 'Could not load your deadlines'))
+  }, [range.from, range.to])
+
+  function step(direction) {
+    setAnchor((prev) =>
+      view === 'Week'
+        ? addDays(prev, direction * 7)
+        : new Date(prev.getFullYear(), prev.getMonth() + direction, 1),
+    )
+  }
+
+  const label =
+    view === 'Week'
+      ? `${monthNames[weekStart.getMonth()]} ${weekStart.getDate()} – ${monthNames[addDays(weekStart, 6).getMonth()]} ${addDays(weekStart, 6).getDate()}, ${weekStart.getFullYear()}`
+      : `${monthNames[anchor.getMonth()]} ${anchor.getFullYear()}`
 
   return (
     <>
@@ -31,9 +88,9 @@ function CalendarView() {
       <div className="page-body">
         <div className="calendar-toolbar">
           <div className="cal-nav">
-            <button className="cal-arrow">‹</button>
-            June 1 – 7, 2026
-            <button className="cal-arrow">›</button>
+            <button className="cal-arrow" onClick={() => step(-1)}>‹</button>
+            {label}
+            <button className="cal-arrow" onClick={() => step(1)}>›</button>
           </div>
 
           <div className="view-toggle">
@@ -48,74 +105,121 @@ function CalendarView() {
             ))}
           </div>
 
-          <button className="today-btn">Today</button>
+          <button className="today-btn" onClick={() => setAnchor(new Date())}>Today</button>
         </div>
 
-        {view === 'Week' ? <WeekView /> : <MonthView />}
+        {error && <p className="error-text">{error}</p>}
+
+        {view === 'Week' ? (
+          <WeekView weekStart={weekStart} tasks={tasks} />
+        ) : (
+          <MonthView anchor={anchor} tasks={tasks} />
+        )}
       </div>
     </>
   )
 }
 
-// The detailed week grid: day columns across the top, time slots down the side.
-function WeekView() {
+// Day columns across the top, two-hour slots down the side.
+function WeekView({ weekStart, tasks }) {
+  // Bucket each deadline into its day column and time row once, up front.
+  const cells = useMemo(() => {
+    const map = {}
+    for (const task of tasks) {
+      const due = new Date(task.deadline)
+      const dueDay = new Date(due)
+      dueDay.setHours(0, 0, 0, 0)
+
+      const dayIndex = Math.round((dueDay - weekStart) / 86400000)
+      if (dayIndex < 0 || dayIndex > 6) continue // outside the shown week
+
+      const key = `${dayIndex}:${slotIndexFor(due)}`
+      ;(map[key] ||= []).push(task)
+    }
+    return map
+  }, [tasks, weekStart])
+
   return (
     <div className="cal-week">
       <div className="cal-week-head">
         <div /> {/* empty corner above the time column */}
-        {days.map((d) => (
-          <div key={d}>{d}</div>
+        {dayNames.map((name, i) => (
+          <div key={name}>
+            {name} {addDays(weekStart, i).getDate()}
+          </div>
         ))}
       </div>
 
-      {times.map((time) => (
+      {times.map((time, slotIndex) => (
         <div key={time} className="cal-row">
           <div className="cal-time">{time}</div>
-          {days.map((_, dayIndex) => {
-            // Find the event (if any) that belongs in this day + time cell
-            const event = events.find((e) => e.day === dayIndex && e.time === time)
-            return (
-              <div key={dayIndex} className="cal-cell">
-                {event && <EventBlock event={event} />}
-              </div>
-            )
-          })}
+          {dayNames.map((_, dayIndex) => (
+            <div key={dayIndex} className="cal-cell">
+              {(cells[`${dayIndex}:${slotIndex}`] ?? []).map((task) => (
+                <DeadlineBlock key={task.id} task={task} />
+              ))}
+            </div>
+          ))}
         </div>
       ))}
     </div>
   )
 }
 
-// One coloured event box. Study blocks get a hover tooltip explaining the "why".
-function EventBlock({ event }) {
+// One deadline. Finished work goes green, anything still open stays red.
+function DeadlineBlock({ task }) {
+  const done = task.status === 'COMPLETE' || task.status === 'SKIPPED'
+  const due = new Date(task.deadline)
+  const at = due.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+
   return (
-    <div className={`cal-event ${event.type} ${event.why ? 'has-tip' : ''}`}>
-      {event.title}
-      {event.sub && <span className="sub">{event.sub}</span>}
-      {event.why && (
-        <span className="tip">
-          <span className="tip-title">Why this block?</span>
-          {event.why}
-        </span>
-      )}
+    <div className={`cal-event ${done ? 'study' : 'deadline'} has-tip`}>
+      {task.title}
+      <span className="sub">{task.course.code} · {at}</span>
+      <span className="tip">
+        <span className="tip-title">{task.course.code} — {task.title}</span>
+        Due {due.toLocaleString([], { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
+        {' · '}{task.effortHours}h estimated · {task.priority.toLowerCase()} priority
+      </span>
     </div>
   )
 }
 
-// A simple month grid (just the dates — no events). Good enough as a second view.
-function MonthView() {
-  const dow = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-  const cells = []
+// Month grid with a count of deadlines on each day.
+function MonthView({ anchor, tasks }) {
+  const year = anchor.getFullYear()
+  const month = anchor.getMonth()
+  const today = new Date()
 
-  // Blank cells for the days before the 1st
-  for (let i = 0; i < JUNE_2026_START_OFFSET; i++) {
+  const daysInMonth = new Date(year, month + 1, 0).getDate()
+  const startOffset = (new Date(year, month, 1).getDay() + 6) % 7 // Mon-based
+
+  // How many deadlines fall on each day of this month.
+  const counts = useMemo(() => {
+    const map = {}
+    for (const task of tasks) {
+      const due = new Date(task.deadline)
+      if (due.getFullYear() === year && due.getMonth() === month) {
+        map[due.getDate()] = (map[due.getDate()] ?? 0) + 1
+      }
+    }
+    return map
+  }, [tasks, year, month])
+
+  const cells = []
+  for (let i = 0; i < startOffset; i++) {
     cells.push(<div key={`empty-${i}`} className="cal-month-cell empty" />)
   }
-  // One cell per day of the month; highlight the 5th (the "today" in our demo)
-  for (let day = 1; day <= JUNE_2026_DAYS; day++) {
+  for (let day = 1; day <= daysInMonth; day++) {
+    const isToday = sameDay(new Date(year, month, day), today)
     cells.push(
-      <div key={day} className={`cal-month-cell ${day === 5 ? 'today' : ''}`}>
+      <div key={day} className={`cal-month-cell ${isToday ? 'today' : ''}`}>
         {day}
+        {counts[day] && (
+          <span className="cal-month-count">
+            {counts[day]} due
+          </span>
+        )}
       </div>,
     )
   }
@@ -123,7 +227,7 @@ function MonthView() {
   return (
     <div className="cal-month">
       <div className="cal-month-grid">
-        {dow.map((d) => (
+        {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((d) => (
           <div key={d} className="cal-month-dow">{d}</div>
         ))}
         {cells}
