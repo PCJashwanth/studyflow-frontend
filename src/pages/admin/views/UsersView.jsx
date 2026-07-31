@@ -14,6 +14,15 @@ function titleCase(role) {
   return role.charAt(0) + role.slice(1).toLowerCase()
 }
 
+// Prefers the specific field message from a 400 ("Password must be at least 8
+// characters") over the generic "Validation failed".
+function fieldError(err) {
+  const data = err.response?.data
+  if (!data) return ''
+  const first = data.details && Object.values(data.details).flat()[0]
+  return first || data.error || ''
+}
+
 function UsersView() {
   const { user: me } = useAuth()
   const [users, setUsers] = useState([])
@@ -22,6 +31,14 @@ function UsersView() {
   const [search, setSearch] = useState('')
   const [confirmUser, setConfirmUser] = useState(null)
 
+  // Add / edit dialogs. `modalError` keeps failures inside the dialog so the
+  // admin can correct the field without losing what they typed.
+  const [addOpen, setAddOpen] = useState(false)
+  const [editUser, setEditUser] = useState(null)
+  const [form, setForm] = useState({ fullName: '', email: '', password: '', role: 'STUDENT' })
+  const [modalError, setModalError] = useState('')
+  const [saving, setSaving] = useState(false)
+
   useEffect(() => {
     api
       .get('/api/admin/users')
@@ -29,6 +46,56 @@ function UsersView() {
       .catch((e) => setError(e.response?.data?.error || 'Failed to load users'))
       .finally(() => setLoading(false))
   }, [])
+
+  function openAdd() {
+    setForm({ fullName: '', email: '', password: '', role: 'STUDENT' })
+    setModalError('')
+    setAddOpen(true)
+  }
+
+  function openEdit(u) {
+    setForm({ fullName: u.fullName, email: u.email, password: '', role: u.role })
+    setModalError('')
+    setEditUser(u)
+  }
+
+  async function addUser(e) {
+    e.preventDefault()
+    setSaving(true)
+    setModalError('')
+    try {
+      const { data } = await api.post('/api/admin/users', {
+        fullName: form.fullName,
+        email: form.email,
+        password: form.password,
+        role: form.role,
+      })
+      setUsers((list) => [data.user, ...list]) // the list is newest-first
+      setAddOpen(false)
+    } catch (err) {
+      setModalError(fieldError(err) || 'Could not create the user')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  async function saveEdit(e) {
+    e.preventDefault()
+    setSaving(true)
+    setModalError('')
+    try {
+      const { data } = await api.patch(`/api/admin/users/${editUser.id}`, {
+        fullName: form.fullName,
+        email: form.email,
+      })
+      setUsers((list) => list.map((u) => (u.id === editUser.id ? data.user : u)))
+      setEditUser(null)
+    } catch (err) {
+      setModalError(fieldError(err) || 'Could not save the changes')
+    } finally {
+      setSaving(false)
+    }
+  }
 
   async function changeRole(id, role) {
     setError('')
@@ -69,7 +136,7 @@ function UsersView() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
-          <button className="add-user-btn" disabled title="Coming soon">+ Add user</button>
+          <button className="add-user-btn" onClick={openAdd}>+ Add user</button>
         </div>
 
         {error && <p className="error-text">{error}</p>}
@@ -120,7 +187,7 @@ function UsersView() {
                         </span>
                       </td>
                       <td>
-                        <button className="table-action" disabled title="Coming soon">Edit</button>
+                        <button className="table-action" onClick={() => openEdit(u)}>Edit</button>
                         {u.isActive ? (
                           <button
                             className="table-action danger"
@@ -147,6 +214,80 @@ function UsersView() {
           )}
         </div>
       </div>
+
+      {addOpen && (
+        <div className="modal-overlay" onClick={() => setAddOpen(false)}>
+          <form className="modal" onClick={(e) => e.stopPropagation()} onSubmit={addUser}>
+            <div className="modal-icon">👤</div>
+            <h3 className="modal-title">Add a user</h3>
+            <p className="modal-text">
+              The account is usable straight away — there is no password reset flow, so set
+              one here and pass it on.
+            </p>
+            <div className="settings-field">
+              <label>Full name</label>
+              <input required value={form.fullName}
+                onChange={(e) => setForm({ ...form, fullName: e.target.value })} />
+            </div>
+            <div className="settings-field">
+              <label>Email</label>
+              <input required type="email" value={form.email}
+                onChange={(e) => setForm({ ...form, email: e.target.value })} />
+            </div>
+            <div className="settings-field">
+              <label>Password</label>
+              <input required type="password" minLength={8} value={form.password}
+                onChange={(e) => setForm({ ...form, password: e.target.value })} />
+            </div>
+            <div className="settings-field">
+              <label>Role</label>
+              <select className="role-select" value={form.role}
+                onChange={(e) => setForm({ ...form, role: e.target.value })}>
+                {ROLE_OPTIONS.map((r) => (
+                  <option key={r} value={r}>{titleCase(r)}</option>
+                ))}
+              </select>
+            </div>
+            {modalError && <p className="error-text">{modalError}</p>}
+            <div className="modal-actions">
+              <button type="button" className="btn-outline" onClick={() => setAddOpen(false)}>Cancel</button>
+              <button type="submit" className="btn-cta" disabled={saving}>
+                {saving ? 'Creating…' : 'Create user'}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {editUser && (
+        <div className="modal-overlay" onClick={() => setEditUser(null)}>
+          <form className="modal" onClick={(e) => e.stopPropagation()} onSubmit={saveEdit}>
+            <div className="modal-icon">✏️</div>
+            <h3 className="modal-title">Edit user</h3>
+            <p className="modal-text">
+              Role and status are changed from the table. Changes here are recorded in the
+              audit log.
+            </p>
+            <div className="settings-field">
+              <label>Full name</label>
+              <input required value={form.fullName}
+                onChange={(e) => setForm({ ...form, fullName: e.target.value })} />
+            </div>
+            <div className="settings-field">
+              <label>Email</label>
+              <input required type="email" value={form.email}
+                onChange={(e) => setForm({ ...form, email: e.target.value })} />
+            </div>
+            {modalError && <p className="error-text">{modalError}</p>}
+            <div className="modal-actions">
+              <button type="button" className="btn-outline" onClick={() => setEditUser(null)}>Cancel</button>
+              <button type="submit" className="btn-cta" disabled={saving}>
+                {saving ? 'Saving…' : 'Save changes'}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
 
       {confirmUser && (
         <div className="modal-overlay" onClick={() => setConfirmUser(null)}>
