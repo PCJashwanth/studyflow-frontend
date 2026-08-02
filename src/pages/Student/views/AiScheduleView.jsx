@@ -17,13 +17,17 @@ function AiScheduleView() {
   const [accepted, setAccepted] = useState(false)
   const [rebalancing, setRebalancing] = useState(false)
   const [diff, setDiff] = useState(null)
+  const [weekStart, setWeekStart] = useState(null)
 
   useEffect(() => {
     api
       .get('/api/schedule')
       .then((r) => {
         setBlocks(r.data.blocks)
-        if (r.data.blocks.length) setSource('saved')
+        if (r.data.blocks.length) {
+          setSource('saved')
+          setWeekStart(r.data.weekStart)
+        }
       })
       .catch((e) => setError(e.response?.data?.error || 'Failed to load schedule'))
       .finally(() => setLoading(false))
@@ -38,6 +42,7 @@ function AiScheduleView() {
       const { data } = await api.post('/api/schedule/generate', {})
       setBlocks(data.blocks)
       setSource(data.source)
+      setWeekStart(data.weekStart)
     } catch (e) {
       setError(e.response?.data?.error || 'Could not generate schedule')
     } finally {
@@ -53,6 +58,7 @@ function AiScheduleView() {
       const { data } = await api.post('/api/schedule/rebalance', {})
       setBlocks(data.blocks)
       setSource(data.source)
+      setWeekStart(data.weekStart)
       setDiff(data.diff)
     } catch (e) {
       setError(e.response?.data?.error || 'Could not rebalance schedule')
@@ -74,7 +80,7 @@ function AiScheduleView() {
         <div className="ai-topbar">
           <span className="ai-status">
             {blocks.length
-              ? `✓ ${blocks.length} blocks · ${totalHours}h · ${sourceLabel}`
+              ? `✓ ${blocks.length} blocks · ${totalHours}h · ${sourceLabel}${weekStart ? ` · week of ${new Date(weekStart).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' })}` : ''}`
               : 'No schedule yet for this week'}
           </span>
           <div className="ai-actions">

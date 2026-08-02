@@ -28,6 +28,13 @@ function CalendarView() {
 
   useEffect(() => {
     api.get('/api/tasks').then((r) => setTasks(r.data.tasks)).catch(() => {})
+    // Open on the week that actually holds the student's schedule.
+    api
+      .get('/api/schedule')
+      .then((r) => {
+        if (r.data.blocks.length) setMonday(new Date(r.data.weekStart))
+      })
+      .catch(() => {})
   }, [])
 
   useEffect(() => {
