@@ -1933,3 +1933,43 @@ button:disabled {
 .req-badge.pending { background: #fef3c7; color: #b45309; }
 .req-badge.approved { background: #dcfce7; color: #15803d; }
 .req-badge.rejected { background: #fee2e2; color: #b91c1c; }
+
+/* rebalance diff panel */
+.diff-panel {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+}
+.diff-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+}
+.diff-added { color: #15803d; }
+.diff-removed { color: #b91c1c; }
+.diff-close {
+  background: none; border: none; cursor: pointer; color: #9ca3af; font-size: 15px;
+}
+.diff-lists { display: flex; gap: 24px; margin-top: 10px; flex-wrap: wrap; }
+.diff-h { font-size: 12px; text-transform: uppercase; color: #6b7280; margin-bottom: 4px; }
+.diff-row { font-size: 13px; padding: 2px 0; }
+.diff-row.added { color: #15803d; }
+.diff-row.removed { color: #b91c1c; text-decoration: line-through; }
+
+/* AI schedule empty state */
+.ai-empty {
+  background: #fff;
+  border: 1px dashed #d1d5db;
+  border-radius: 12px;
+  padding: 40px 24px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
