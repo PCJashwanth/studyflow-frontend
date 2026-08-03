@@ -35,3 +35,39 @@ api.interceptors.response.use(
     return Promise.reject(err)
   },
 )
+
+// ── Client-side optimization: caching ──────────────────────────────────────
+// Views refetch on every mount, so moving between tabs repeats the same GETs.
+// This memoizes GET responses for a short window, which removes the redundant
+// network round trips without letting the UI go stale.
+//
+// Any write (POST/PUT/PATCH/DELETE) clears the cache, so a change is never
+// hidden behind a stale read.
+const TTL_MS = 30_000
+const cache = new Map()
+
+export function clearApiCache() {
+  cache.clear()
+}
+
+export async function cachedGet(url, config) {
+  const key = `${url}|${JSON.stringify(config?.params ?? {})}`
+  const hit = cache.get(key)
+
+  if (hit && Date.now() - hit.at < TTL_MS) return hit.res
+
+  const res = await api.get(url, config)
+  cache.set(key, { res, at: Date.now() })
+  return res
+}
+
+// Writes invalidate everything — simpler than tracking which key a write
+// affects, and correct, which matters more than cleverness here.
+for (const method of ['post', 'put', 'patch', 'delete']) {
+  const original = api[method].bind(api)
+  api[method] = async (...args) => {
+    const res = await original(...args)
+    clearApiCache()
+    return res
+  }
+}
