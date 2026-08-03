@@ -1944,3 +1944,78 @@ button:disabled {
 .req-badge.pending { background: #fef3c7; color: #b45309; }
 .req-badge.approved { background: #dcfce7; color: #15803d; }
 .req-badge.rejected { background: #fee2e2; color: #b91c1c; }
+
+/* availability form (per-day time ranges) */
+.avail-day-row {
+  display: flex;
+  gap: 14px;
+  padding: 10px 0;
+  border-bottom: 1px solid #f0f2f5;
+}
+.avail-day-row:last-of-type { border-bottom: none; }
+.avail-day-label {
+  width: 42px;
+  flex-shrink: 0;
+  font-weight: 600;
+  color: #374151;
+  padding-top: 6px;
+}
+.avail-ranges { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
+.range-row { display: flex; align-items: center; gap: 6px; }
+.range-row input[type='time'] {
+  border: 1.5px solid #dcdfe5;
+  border-radius: 8px;
+  padding: 5px 8px;
+  font-size: 14px;
+  font-family: inherit;
+}
+.range-sep { color: #9ca3af; }
+.range-remove {
+  border: none; background: none; color: #ef4444; cursor: pointer; font-size: 13px; padding: 2px 4px;
+}
+.range-add {
+  border: 1px dashed #c7cdd6; background: none; color: #2e6db4; border-radius: 8px;
+  padding: 4px 10px; font-size: 13px; cursor: pointer;
+}
+.range-add:hover { background: #eef4fb; }
+.avail-none-text { color: #9ca3af; font-size: 13px; font-style: italic; }
+
+/* rebalance diff panel */
+.diff-panel {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+}
+.diff-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+}
+.diff-added { color: #15803d; }
+.diff-removed { color: #b91c1c; }
+.diff-close {
+  background: none; border: none; cursor: pointer; color: #9ca3af; font-size: 15px;
+}
+.diff-lists { display: flex; gap: 24px; margin-top: 10px; flex-wrap: wrap; }
+.diff-h { font-size: 12px; text-transform: uppercase; color: #6b7280; margin-bottom: 4px; }
+.diff-row { font-size: 13px; padding: 2px 0; }
+.diff-row.added { color: #15803d; }
+.diff-row.removed { color: #b91c1c; text-decoration: line-through; }
+
+/* AI schedule empty state */
+.ai-empty {
+  background: #fff;
+  border: 1px dashed #d1d5db;
+  border-radius: 12px;
+  padding: 40px 24px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
