@@ -52,6 +52,18 @@ export function AuthProvider({ children }) {
     return data.user
   }, [])
 
+  // Forgot password: request a reset code (never reveals if the email exists).
+  const forgotPassword = useCallback(async (email) => {
+    const { data } = await api.post('/api/auth/forgot-password', { email })
+    return data
+  }, [])
+
+  // Forgot password: verify the emailed code and set a new password.
+  const resetPassword = useCallback(async (email, code, newPassword) => {
+    const { data } = await api.post('/api/auth/reset-password', { email, code, newPassword })
+    return data
+  }, [])
+
   const signup = useCallback(async (payload) => {
     const { data } = await api.post('/api/auth/signup', payload)
     tokenStore.set(data.token)
@@ -68,7 +80,7 @@ export function AuthProvider({ children }) {
   const updateUser = useCallback((fields) => setUser((u) => (u ? { ...u, ...fields } : u)), [])
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, verifyOtp, signup, logout, updateUser }}>
+    <AuthContext.Provider value={{ user, loading, login, verifyOtp, forgotPassword, resetPassword, signup, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   )
