@@ -1973,6 +1973,15 @@ button:disabled {
 .profile-name { font-size: 20px; font-weight: 700; color: #111827; }
 .profile-sub { font-size: 13px; color: #6b7280; }
 
+/* profile avatar images + edit controls */
+.avatar-img-lg { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+.avatar-img-edit { width: 72px; height: 72px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+.settings-card-head { display: flex; align-items: center; justify-content: space-between; }
+.avatar-edit { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.settings-actions { display: flex; align-items: center; gap: 10px; }
+/* read-only fields look muted so it's clear you must click Edit first */
+.settings-field input[readonly] { background: #f3f4f6; color: #4b5563; cursor: default; }
+
 /* availability form (per-day time ranges) */
 .avail-day-row {
   display: flex;
