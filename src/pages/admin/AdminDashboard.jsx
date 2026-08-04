@@ -5,6 +5,7 @@ import CoursesView from './views/CoursesView'
 import RequestsView from './views/RequestsView'
 import AuditLogView from './views/AuditLogView'
 import SettingsView from './views/SettingsView'
+import ProfileView from './views/ProfileView'
 
 
 const views = {
@@ -13,6 +14,7 @@ const views = {
   Requests: RequestsView,
   'Audit log': AuditLogView,
   Settings: SettingsView,
+  Profile: ProfileView,
 }
 const navItems = ['Users', 'Courses', 'Requests', 'Audit log']
 
@@ -58,7 +60,12 @@ function AdminDashboard() {
         <div className="sidebar-bottom">
           {showPopup && (
             <div className="profile-popup">
-              <button className="popup-item" onClick={() => setShowPopup(false)}>Profile</button>
+              <button
+                className="popup-item"
+                onClick={() => { setActivePage('Profile'); setShowPopup(false) }}
+              >
+                Profile
+              </button>
               <button
                 className="popup-item"
                 onClick={() => { setActivePage('Settings'); setShowPopup(false) }}

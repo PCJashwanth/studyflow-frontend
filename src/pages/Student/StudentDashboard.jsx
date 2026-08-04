@@ -9,6 +9,7 @@ import KanbanView from './views/KanbanView'
 import AiScheduleView from './views/AiScheduleView'
 import ReflectionView from './views/ReflectionView'
 import SettingsView from './views/SettingsView'
+import ProfileView from './views/ProfileView'
 
 // The student area shell: sidebar + profile menu, with the main panel swapping
 // between views based on the selected page. Each page name maps to a component.
@@ -22,6 +23,7 @@ const views = {
   'AI Schedule': AiScheduleView,
   Reflection: ReflectionView,
   Settings: SettingsView,
+  Profile: ProfileView,
 }
 
 // These show up in the sidebar. "Settings" is intentionally left out — it opens
@@ -67,7 +69,7 @@ function StudentDashboard() {
         <div className="sidebar-bottom">
           {showPopup && (
             <div className="profile-popup">
-              <button className="popup-item" onClick={() => setShowPopup(false)}>Profile</button>
+              <button className="popup-item" onClick={() => goTo('Profile')}>Profile</button>
               {/* Settings now lives here in the profile menu */}
               <button className="popup-item" onClick={() => goTo('Settings')}>Settings</button>
               <hr className="popup-divider" />

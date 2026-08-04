@@ -38,8 +38,15 @@ export function AuthProvider({ children }) {
     setUnauthorizedHandler(() => setUser(null))
   }, [])
 
+  // Step 1: verify credentials → backend emails an OTP (returns { otpRequired, email, devCode }).
   const login = useCallback(async (email, password) => {
     const { data } = await api.post('/api/auth/login', { email, password })
+    return data
+  }, [])
+
+  // Step 2: verify the emailed code → sets the token + user.
+  const verifyOtp = useCallback(async (email, code) => {
+    const { data } = await api.post('/api/auth/verify-otp', { email, code })
     tokenStore.set(data.token)
     setUser(data.user)
     return data.user
@@ -57,8 +64,11 @@ export function AuthProvider({ children }) {
     setUser(null)
   }, [])
 
+  // Merge fields into the current user (e.g. after editing the profile name).
+  const updateUser = useCallback((fields) => setUser((u) => (u ? { ...u, ...fields } : u)), [])
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, signup, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, verifyOtp, signup, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   )

@@ -4,14 +4,17 @@ import OverviewView from './views/OverviewView'
 import WorkloadView from './views/WorkloadView'
 import AssignmentsView from './views/AssignmentsView'
 import SettingsView from './views/SettingsView'
+import ProfileView from './views/ProfileView'
 
 const views = {
   Overview: OverviewView,
   Workload: WorkloadView,
   Assignments: AssignmentsView,
   Settings: SettingsView,
+  Profile: ProfileView,
 }
-const navItems = Object.keys(views)
+// Settings opens from the profile menu, not the sidebar (avoid duplication).
+const navItems = ['Overview', 'Workload', 'Assignments']
 
 function initialsOf(name) {
   return name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase()
@@ -46,7 +49,12 @@ function InstructorDashboard() {
         <div className="sidebar-bottom">
           {showPopup && (
             <div className="profile-popup">
-              <button className="popup-item" onClick={() => setShowPopup(false)}>Profile</button>
+              <button
+                className="popup-item"
+                onClick={() => { setActivePage('Profile'); setShowPopup(false) }}
+              >
+                Profile
+              </button>
               <button
                 className="popup-item"
                 onClick={() => { setActivePage('Settings'); setShowPopup(false) }}

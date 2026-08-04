@@ -4,16 +4,19 @@ import { api } from '../../../lib/api'
 
 function CoursesView({ onNavigate }) {
   const [courses, setCourses] = useState([])
+  const [instructors, setInstructors] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [search, setSearch] = useState('')
   const [showAdd, setShowAdd] = useState(false)
-  const [form, setForm] = useState({ code: '', title: '', instructorName: '', term: '' })
+  const [form, setForm] = useState({ code: '', title: '', instructorId: '', term: '' })
 
   useEffect(() => {
-    api
-      .get('/api/admin/courses')
-      .then((r) => setCourses(r.data.courses))
+    Promise.all([api.get('/api/admin/courses'), api.get('/api/admin/instructors')])
+      .then(([c, i]) => {
+        setCourses(c.data.courses)
+        setInstructors(i.data.instructors)
+      })
       .catch((e) => setError(e.response?.data?.error || 'Failed to load courses'))
       .finally(() => setLoading(false))
   }, [])
@@ -29,6 +32,16 @@ function CoursesView({ onNavigate }) {
     }
   }
 
+  async function assignInstructor(course, instructorId) {
+    setError('')
+    try {
+      const { data } = await api.patch(`/api/admin/courses/${course.id}`, { instructorId: instructorId || null })
+      setCourses((list) => list.map((c) => (c.id === course.id ? data.course : c)))
+    } catch (e) {
+      setError(e.response?.data?.error || 'Could not assign instructor')
+    }
+  }
+
   async function addCourse(e) {
     e.preventDefault()
     setError('')
@@ -36,12 +49,12 @@ function CoursesView({ onNavigate }) {
       const { data } = await api.post('/api/admin/courses', {
         code: form.code,
         title: form.title,
-        instructorName: form.instructorName || undefined,
+        instructorId: form.instructorId || undefined,
         term: form.term || undefined,
       })
       setCourses((list) => [data.course, ...list])
       setShowAdd(false)
-      setForm({ code: '', title: '', instructorName: '', term: '' })
+      setForm({ code: '', title: '', instructorId: '', term: '' })
     } catch (err) {
       const d = err.response?.data
       setError((d?.details && Object.values(d.details)[0]?.[0]) || d?.error || 'Could not add course')
@@ -81,8 +94,12 @@ function CoursesView({ onNavigate }) {
               onChange={(e) => setForm({ ...form, code: e.target.value })} />
             <input required placeholder="Title" value={form.title}
               onChange={(e) => setForm({ ...form, title: e.target.value })} />
-            <input placeholder="Instructor" value={form.instructorName}
-              onChange={(e) => setForm({ ...form, instructorName: e.target.value })} />
+            <select value={form.instructorId} onChange={(e) => setForm({ ...form, instructorId: e.target.value })}>
+              <option value="">Assign instructor…</option>
+              {instructors.map((i) => (
+                <option key={i.id} value={i.id}>{i.fullName}</option>
+              ))}
+            </select>
             <input placeholder="Term (e.g. Fall 2026)" value={form.term}
               onChange={(e) => setForm({ ...form, term: e.target.value })} />
             <button className="btn-cta" type="submit">Save</button>
@@ -112,7 +129,18 @@ function CoursesView({ onNavigate }) {
                     <tr key={c.id}>
                       <td><strong>{c.code}</strong></td>
                       <td>{c.title}</td>
-                      <td>{c.instructorName || '—'}</td>
+                      <td>
+                        <select
+                          className="role-select"
+                          value={c.instructorId || ''}
+                          onChange={(e) => assignInstructor(c, e.target.value)}
+                        >
+                          <option value="">Unassigned</option>
+                          {instructors.map((i) => (
+                            <option key={i.id} value={i.id}>{i.fullName}</option>
+                          ))}
+                        </select>
+                      </td>
                       <td>{c.students}</td>
                       <td>{c.term}</td>
                       <td>
@@ -121,7 +149,6 @@ function CoursesView({ onNavigate }) {
                         </span>
                       </td>
                       <td>
-                        <button className="table-action" disabled title="Coming soon">Edit</button>
                         <button className="table-action" onClick={() => toggleArchive(c)}>
                           {isActive ? 'Archive' : 'Restore'}
                         </button>
