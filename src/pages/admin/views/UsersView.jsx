@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import AdminHeader from './AdminHeader'
-import { api } from '../../../lib/api'
+import { api, cachedGet } from '../../../lib/api'
 import { useAuth } from '../../../context/AuthContext'
 
 const ROLE_OPTIONS = ['STUDENT', 'INSTRUCTOR', 'ADMIN']
@@ -40,8 +40,9 @@ function UsersView() {
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
-    api
-      .get('/api/admin/users')
+    // cachedGet: repeat visits to this tab reuse the response instead of
+    // refetching. Any write clears the cache, so the list never goes stale.
+    cachedGet('/api/admin/users')
       .then((r) => setUsers(r.data.users))
       .catch((e) => setError(e.response?.data?.error || 'Failed to load users'))
       .finally(() => setLoading(false))
@@ -118,11 +119,15 @@ function UsersView() {
     setConfirmUser(null)
   }
 
-  const visible = users.filter(
-    (u) =>
-      u.fullName.toLowerCase().includes(search.toLowerCase()) ||
-      u.email.toLowerCase().includes(search.toLowerCase()),
-  )
+  // Memoization: this filter ran on every render — including ones caused by
+  // opening a modal or typing in an unrelated field. useMemo recomputes it only
+  // when the user list or the search term actually changes.
+  const visible = useMemo(() => {
+    const q = search.toLowerCase()
+    return users.filter(
+      (u) => u.fullName.toLowerCase().includes(q) || u.email.toLowerCase().includes(q),
+    )
+  }, [users, search])
 
   return (
     <>
