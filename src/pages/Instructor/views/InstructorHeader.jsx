@@ -19,11 +19,6 @@ function InstructorHeader({ title, courses, course, onCourseChange }) {
           <h1 className="page-title">{title}</h1>
         )}
       </div>
-
-      <div className="search-box">
-        <span>🔍</span>
-        <input type="text" placeholder="Search..." />
-      </div>
     </header>
   )
 }
